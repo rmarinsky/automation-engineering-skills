@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Automation Skills — approval review</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --ink: #172033;
+      --muted: #5f6d85;
+      --canvas: #f4f7fb;
+      --panel: #ffffff;
+      --line: #dce3ed;
+      --accent: #3859d8;
+      --accent-soft: #e8edff;
+      --green: #137a4c;
+      --green-soft: #e5f7ee;
+      --amber: #9b5d00;
+      --amber-soft: #fff2dc;
+      --red: #a23434;
+      --code: #101827;
+      --code-ink: #edf3ff;
+      --shadow: 0 18px 52px rgba(29, 42, 68, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, select { font: inherit; }
+
+    .deck { max-width: 1240px; margin: 0 auto; padding: 18px 20px 46px; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+      padding: 6px 0 18px;
+      color: var(--muted);
+    }
+
+    .toolbar__group { display: flex; align-items: center; gap: 8px; }
+
+    .toolbar button, .toolbar select {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 7px 11px;
+    }
+
+    .toolbar button { cursor: pointer; }
+    .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+    .toolbar button:disabled { cursor: not-allowed; opacity: .45; }
+    .toolbar select { max-width: min(45vw, 370px); }
+
+    .slide {
+      display: none;
+      min-height: 690px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .slide.is-active { display: block; }
+
+    .slide__inner { padding: clamp(28px, 5vw, 70px); }
+    .slide__eyebrow { margin: 0 0 12px; color: var(--accent); font-size: .82rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 900px; margin-bottom: 18px; font-size: clamp(2.3rem, 6vw, 4.9rem); line-height: 1.02; letter-spacing: -.05em; }
+    h2 { margin-bottom: 13px; font-size: clamp(1.9rem, 4.4vw, 3.15rem); line-height: 1.08; letter-spacing: -.04em; }
+    h3 { margin-bottom: 8px; font-size: 1.1rem; }
+    .lead { max-width: 800px; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.35rem); }
+    .muted { color: var(--muted); }
+    .small { font-size: .88rem; }
+
+    .badge-row, .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+    .badge, .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 29px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+    .badge--pending { background: var(--amber-soft); color: var(--amber); }
+    .badge--approved { background: var(--green-soft); color: var(--green); }
+    .badge--needs-evidence { background: #f1edf9; color: #7655a5; }
+    .tag { border: 1px solid var(--line); color: var(--muted); font-weight: 600; }
+
+    .grid { display: grid; gap: 18px; }
+    .grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--panel) 94%, var(--accent-soft));
+      padding: 18px;
+    }
+    .card--accent { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); background: var(--accent-soft); }
+    .card--decision { border-left: 5px solid var(--accent); }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+
+    ul, ol { padding-left: 1.2em; }
+    li + li { margin-top: 7px; }
+
+    .decision {
+      margin: 18px 0 0;
+      border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+      border-radius: 14px;
+      background: var(--accent-soft);
+      padding: 16px 18px;
+    }
+    .decision strong { display: block; margin-bottom: 5px; }
+    .command {
+      display: inline-block;
+      margin-top: 9px;
+      border-radius: 7px;
+      background: #17254f;
+      color: #fff;
+      padding: 5px 8px;
+      font: .84rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .code {
+      margin: 0;
+      overflow: auto;
+      border-radius: 12px;
+      background: var(--code);
+      color: var(--code-ink);
+      padding: 17px;
+      font: .79rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      tab-size: 2;
+      white-space: pre;
+    }
+    .code-wrap { white-space: pre-wrap; }
+
+    .matrix { width: 100%; border-collapse: collapse; font-size: .91rem; }
+    .matrix th, .matrix td { padding: 10px 11px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .matrix th { color: var(--muted); font-size: .75rem; letter-spacing: .07em; text-transform: uppercase; }
+    .matrix td:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; }
+    .table-scroll { overflow-x: auto; }
+
+    .overview {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .overview button {
+      min-height: 84px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      padding: 11px;
+      text-align: left;
+    }
+    .overview button:hover { border-color: var(--accent); background: var(--accent-soft); }
+    .overview b { display: block; color: var(--accent); font-size: .78rem; }
+    .overview span { display: block; margin-top: 4px; font-size: .83rem; line-height: 1.3; }
+
+    .slide-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+    .slide-actions button {
+      border: 0;
+      border-radius: 9px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 700;
+    }
+    .slide-actions button:hover { filter: brightness(.93); }
+
+    .rule { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: start; }
+    .rule__num { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 800; }
+
+    a { color: var(--accent); }
+
+    @media (max-width: 820px) {
+      .deck { padding-inline: 10px; }
+      .slide { min-height: 0; border-radius: 14px; }
+      .slide__inner { padding: 27px 20px 34px; }
+      .grid--2, .grid--3 { grid-template-columns: 1fr; }
+      .overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+      .toolbar select { max-width: 100%; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .deck { max-width: none; padding: 0; }
+      .toolbar { display: none; }
+      .slide { display: block !important; min-height: 0; box-shadow: none; border-radius: 0; break-after: page; page-break-after: always; }
+      .slide__inner { padding: 34px; }
+      .code { white-space: pre-wrap; font-size: 8.5pt; }
+      .overview { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <nav class="toolbar" aria-label="Навігація презентацією">
+      <div class="toolbar__group">
+        <button id="previous" type="button" aria-label="Попередній слайд">←</button>
+        <button id="next" type="button" aria-label="Наступний слайд">→</button>
+        <span id="counter" aria-live="polite"></span>
+      </div>
+      <select id="slide-select" aria-label="Перейти до слайда"></select>
+      <span class="small">← → або J / K · P — друк</span>
+    </nav>
+
+    <section class="slide is-active" id="slide-1" data-title="Огляд">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Automation engineering skills</p>
+        <h1>Що ще треба погодити — і як це буде працювати</h1>
+        <p class="lead">Review deck для послідовного approve/change/reject. Тут є всі готові рішення, приклади тестів, реалізацій і setup-напрями для Java, TypeScript, Python, API та mobile.</p>
+        <div class="badge-row">
+          <span class="badge badge--approved">14 прикладів already approved · 7 changed</span>
+          <span class="badge badge--pending">0 pending — review complete</span>
+          <span class="badge badge--needs-evidence">32 planned skills ще не рівні готовим skills</span>
+        </div>
+        <div class="card card--accent">
+          <h3>Як читати deck</h3>
+          <p>Кожен pending блок містить конкретний ID, межу правила, рекомендований default і точний рядок для відповіді. Approve не публікує код автоматично: після нього йдуть RED eval, мінімальна зміна skill, validation і fresh-agent forward test.</p>
+        </div>
+        <div class="overview" aria-label="Швидкий перехід до розділу">
+          <button data-go="3" type="button"><b>01</b><span>Матриця рішень</span></button>
+          <button data-go="4" type="button"><b>02</b><span>Спільні правила</span></button>
+          <button data-go="6" type="button"><b>03</b><span>Java: setup + 4 приклади</span></button>
+          <button data-go="11" type="button"><b>04</b><span>TypeScript</span></button>
+          <button data-go="13" type="button"><b>05</b><span>Python</span></button>
+          <button data-go="15" type="button"><b>06</b><span>API</span></button>
+          <button data-go="17" type="button"><b>07</b><span>Mobile: стратегія + native приклади</span></button>
+          <button data-go="18" type="button"><b>08</b><span>C# / Playwright</span></button>
+          <button data-go="22" type="button"><b>09</b><span>API contract validation</span></button>
+          <button data-go="23" type="button"><b>10</b><span>CI fail-fast</span></button>
+          <button data-go="24" type="button"><b>11</b><span>Відкриті питання</span></button>
+          <button data-go="26" type="button"><b>12</b><span>Готові команди</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-2" data-title="Процес після рішення">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Процес</p>
+        <h2>Approve — це зміна контракту, не миттєва публікація</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <div class="rule"><span class="rule__num">1</span><div><strong>Точний eval</strong><br><span class="muted">Спочатку фіксуємо observable behavior і RED-сценарій для цього конкретного правила.</span></div></div>
+            <div class="rule"><span class="rule__num">2</span><div><strong>Мінімальний skill change</strong><br><span class="muted">Лише approved приклад і потрібні reference rules; без «платформи наперед».</span></div></div>
+            <div class="rule"><span class="rule__num">3</span><div><strong>Verification</strong><br><span class="muted">Targeted check → repo check → skill validator → fresh-agent forward test.</span></div></div>
+          </div>
+          <div class="card card--decision">
+            <h3>Єдина відповідь для кожного рішення</h3>
+            <p><span class="command">APPROVE EX-JAVA-01</span></p>
+            <p><span class="command">CHANGE EX-CS-01: retain the repository's existing xUnit runner</span></p>
+            <p><span class="command">REJECT EX-MOBILE-01: …</span></p>
+            <p class="small muted">Приклади залишаються узагальненими; жоден приватний або неперевірено ліцензований фрагмент не переходить у public skill.</p>
+          </div>
+        </div>
+        <div class="decision">
+          <strong>Рекомендована послідовність</strong>
+          Спочатку `EX-ARCH-01` і `EX-NAME-01`, потім Java four-pack, Python та Playwright API, після цього C#/native mobile, contract validation і CI gate. Так загальні правила не доведеться переписувати в кожній мові.
+        </div>
+        <div class="grid grid--3">
+          <div class="card"><h3>Що саме погоджується</h3><p>Не бібліотека і не чужий код. Ти погоджуєш правило, межу його застосування та приклад, яким агент має пояснити свій вибір.</p></div>
+          <div class="card"><h3>Як агент застосує правило</h3><p>Спочатку інспектує існуючий repo, називає точний seam і лише потім генерує мінімальну зміну в його локальному стилі.</p></div>
+          <div class="card"><h3>Що має довести eval</h3><p>Правильний case проходить; negative case не дає агенту «обійти» правило через BasePage, sleep, XPath або зайву абстракцію.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-3" data-title="Матриця рішень">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Pending approvals</p>
+        <h2>16 рішень вирішені — review complete</h2>
+        <div class="table-scroll">
+          <table class="matrix">
+            <thead><tr><th>ID</th><th>Що стане правилом</th><th>Рекомендація</th></tr></thead>
+            <tbody>
+              <tr><td>EX-ARCH-01</td><td>Composition over inheritance: aggregate fields/components by default; base class only for a narrow platform contract. Language-agnostic.</td><td>CHANGE → approve as architecture-only</td></tr>
+              <tr><td>EX-NAME-01</td><td>Behavior names, domain verbs, target/expected variables.</td><td>APPROVED</td></tr>
+              <tr><td>EX-JAVA-01</td><td>JUnit 5 parameterization + immutable case data.</td><td>APPROVED</td></tr>
+              <tr><td>EX-JAVA-02</td><td>Selenide pages/components + retrying conditions.</td><td>APPROVED</td></tr>
+              <tr><td>EX-JAVA-03</td><td>JUnit 5 extensions for lifecycle/preconditions instead of BaseTest.</td><td>CHANGE → approve; simpler examples</td></tr>
+              <tr><td>EX-TESTNG-01</td><td>Listener для lifecycle/reporting та reusable preconditions; build config, не TestNG XML. Не форсувати JUnit 5 після відмови.</td><td>CHANGE → approve; respect TestNG stay</td></tr>
+              <tr><td>EX-PY-01</td><td>pytest immutable parameter cases with stable IDs.</td><td>APPROVED</td></tr>
+              <tr><td>EX-PY-02</td><td>Playwright Python components without BasePage plumbing.</td><td>APPROVED</td></tr>
+              <tr><td>EX-API-01</td><td>Playwright API default; typed client + owned cleanup; Axios only when repo already needs it.</td><td>APPROVED</td></tr>
+              <tr><td>EX-MOBILE-01</td><td>Native-first mobile; Appium fallback. Maximize API pre/postconditions; deep links; clone related repos for context.</td><td>CHANGE → approve; API-first + local context</td></tr>
+              <tr><td>EX-CS-01</td><td>Playwright .NET + NUnit-style explicit assertions and page API.</td><td>APPROVED</td></tr>
+              <tr><td>EX-IOS-01</td><td>XCUITest + accessibility identifiers + API setup/cleanup. Native locators OK; no XPath; testability first.</td><td>CHANGE → approve; no XPath</td></tr>
+              <tr><td>EX-ANDROID-01</td><td>Kakao DSL for native Android, API setup/cleanup. Native locators OK; no XPath; testability first.</td><td>CHANGE → approve; no XPath</td></tr>
+              <tr><td>EX-RN-01</td><td>Detox + testID for React Native, API setup/cleanup. Native locators OK; no XPath; testability first.</td><td>CHANGE → approve; no XPath</td></tr>
+              <tr><td>EX-CONTRACT-01</td><td>Runtime models plus OpenAPI/schema validation, not contract-first dogma.</td><td>APPROVED</td></tr>
+              <tr><td>EX-CI-01</td><td>Small preflight gate before full regression; fail fast on environment breakage.</td><td>APPROVED</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="decision">
+          <strong>Важлива межа</strong>
+          Усі 16 review IDs вирішені. Approved: shared NAME, Java 01/02, Python, API, C#, CONTRACT, CI (+ earlier TS/Java-API/DATA). Changed: ARCH (architecture-only), JAVA-03 (simpler examples), TESTNG (respect stay), MOBILE (API-first + local SUT), IOS/ANDROID/RN (native locators OK; never XPath; testability first).
+        </div>
+        <p class="muted small">Матриця — лише індекс. Наступні слайди пояснюють, що саме зміниться у відповідному skill і що агент має відмовитися робити.</p>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-4" data-title="EX-ARCH-01: композиція">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-ARCH-01 · shared architecture rule</p>
+        <h2>Composition over inheritance — language-agnostic</h2>
+        <div class="grid grid--2">
+          <div>
+            <div class="card card--decision">
+              <h3>Правило</h3>
+              <p>Це архітектурний підхід, не мовний синтаксис. Page/screen/components агрегуються як fields (або еквівалент composition). Inheritance дозволений лише для одного вузького stable platform contract («is-a»), не як спосіб поділити helpers.</p>
+              <ul>
+                <li>Не наслідуватися заради driver/page handle, config, credentials, assertions чи helper methods.</li>
+                <li>Reusable domain behavior живе в named common/shared modules біля сутності, не в універсальному base.</li>
+                <li>Runner lifecycle (setup/teardown/preconditions) належить extension/fixture/listener seam — не BaseTest inheritance tree.</li>
+                <li>Кожне виключення пояснюється однією конкретною причиною і exact boundary.</li>
+              </ul>
+            </div>
+            <div class="decision">
+              <strong>Рішення: CHANGE → approve as architecture-only</strong>
+              <span class="command">CHANGE EX-ARCH-01: language-agnostic composition; move TS/Java/Python constructor seams to language skills</span>
+            </div>
+          </div>
+          <pre class="code"><code>// Bad: assertion / helpers are not a page subtype.
+ProjectAssertions extends ProjectsPage
+BasePage with click/fill/assert helpers
+
+// Good: page aggregates reusable areas.
+ProjectsPage
+  ├─ header: ProjectsHeader
+  └─ grid: ProjectGrid
+
+// Runner lifecycle belongs to the framework seam:
+// extension · fixture · listener — not inheritance.</code></pre>
+        </div>
+        <div class="grid grid--3">
+          <div class="card"><h3>Що саме погоджується</h3><p>Лише архітектурний default: aggregation/composition first; inheritance only for a real platform «is-a» contract. Мовні деталі (TS <code>PageHolder</code>, Java/Python injection, Kakao/XCUITest screen shape) живуть у відповідних language skills.</p></div>
+          <div class="card"><h3>До → після</h3><p><code>BaseTest</code> з login/config/helpers → framework lifecycle seam. <code>BasePage</code> з UI helpers → narrow platform seam + domain common modules. Немає «constructor-free» як частини цього правила.</p></div>
+          <div class="card"><h3>Як агент застосує правило</h3><p>Покаже конкретне дублювання, спершу спробує fields/components/fixtures, а якщо пропонує base class — напише одну конкретну причину та його exact boundary, незалежно від мови.</p></div>
+        </div>
+        <div class="decision"><strong>Language seams (не частина EX-ARCH-01)</strong>Constructor-free TypeScript <code>PageHolder</code>, framework-required injection у Java/Python, native screen DSL — окремі language examples вже на TS/Java/Python/mobile слайдах.<br><strong>Що має довести eval</strong>Агент не додає BasePage/BaseTest заради helpers/config/assertions; composition є default; будь-який base class має одну названу platform boundary.</div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-5" data-title="EX-NAME-01: назви">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-NAME-01 · shared rule</p>
+        <h2>Назви описують поведінку, а не клік або номер кейсу</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Контракт іменування</h3>
+            <ul>
+              <li>Test name: observable result — <code>filters projects by exact name</code>.</li>
+              <li>Page action: domain verb — <code>searchFor</code>, <code>createProject</code>.</li>
+              <li>Assertion: expected state — <code>projectCountShouldBe</code>, <code>isLoaded</code>.</li>
+              <li><code>target…</code> = input; <code>expected…</code> = oracle; <code>actual…</code> лише для non-retrying API/domain assertion.</li>
+              <li><code>test.step</code> групує meaningful business action/verification у Playwright; не обгортає кожен клік.</li>
+              <li>Коментар додається для ticket/risk/business rule, який не видно з назви; не переказує код.</li>
+              <li>Локальна naming convention має перевагу над універсальним шаблоном.</li>
+            </ul>
+          </div>
+          <pre class="code"><code>test("filters projects by exact name", async ({ app }) =&gt; {
+  const targetProjectName = "Manufacture light";
+  const expectedVisibleProjects = 1;
+
+  await test.step("Filter projects by exact name", async () =&gt; {
+    await app.projects.open();
+    await app.projects.isLoaded();
+    await app.projects.searchFor(targetProjectName);
+  });
+  await test.step("Verify only the target project remains", async () =&gt; {
+    await app.projects.projectCountShouldBe(expectedVisibleProjects);
+  });
+  await app.projects.projectNamed(targetProjectName).isLoaded();
+});
+
+// Low-level component only:
+// clickSearchButton() is acceptable there,
+// but not as a scenario-level test action.</code></pre>
+        </div>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>До → після</h3>
+            <pre class="code code-wrap"><code>// Reject at scenario level
+test("test 1", async () =&gt; clickSearchButton());
+const data = makeData();
+
+// Prefer
+test("shows matching projects", async ({ app }) =&gt; {
+  const targetProject = buildProject();
+  const expectedVisibleProjects = 1;
+  // domain actions and a visible outcome
+});</code></pre>
+          </div>
+          <div class="card">
+            <h3>Як агент застосує правило</h3>
+            <p>Agent preserves an existing repository convention when it exists. Otherwise it uses behavior-oriented names, adds <code>test.step</code> around a coherent business operation or outcome, does not rename public APIs just for aesthetics, and keeps technical verbs inside low-level components.</p>
+            <p><strong>Що має довести eval:</strong> generated test contains a domain action and an observable assertion; it does not end as <code>clickButton</code>, <code>test2</code> or a generic <code>data</code> variable.</p>
+          </div>
+        </div>
+        <div class="decision"><strong>Рішення: approved</strong><span class="command">APPROVE EX-NAME-01</span></div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-6" data-title="Java: baseline і setup">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Java · repository/CI baseline</p>
+        <h2>Java: JUnit 5 + Selenide + REST Assured, Lombok — тільки для data</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Рекомендований стек</h3>
+            <ul>
+              <li><strong>JUnit 5</strong> — default для нових Java/Kotlin тестів.</li>
+              <li><strong>JUnit 4</strong> — тільки migration boundary існуючого suite; не змішувати JUnit 4 і 5 annotations у новому тесті.</li>
+              <li><strong>Selenide</strong> — UI; <strong>REST Assured</strong> + AssertJ — Java API.</li>
+              <li><strong>Gradle Kotlin DSL</strong> або існуючий Maven; не створювати другий build path.</li>
+              <li><strong>Datafaker</strong> — свіжі non-semantic test entities.</li>
+              <li><strong>Lombok</strong> — DTO/case data: <code>@Value</code>, <code>@Builder</code>. Не генерувати ним Page Object API і не ставити <code>@Data</code> за замовчуванням.</li>
+            </ul>
+          </div>
+          <pre class="code"><code>// build.gradle.kts — pin versions in one catalog
+dependencies {
+  testImplementation(platform("org.junit:junit-bom:&lt;pinned&gt;"))
+  testImplementation("org.junit.jupiter:junit-jupiter")
+  testImplementation("com.codeborne:selenide:&lt;pinned&gt;")
+  testImplementation("io.rest-assured:rest-assured:&lt;pinned&gt;")
+  testImplementation("net.datafaker:datafaker:&lt;pinned&gt;")
+
+  compileOnly("org.projectlombok:lombok:&lt;pinned&gt;")
+  annotationProcessor("org.projectlombok:lombok:&lt;pinned&gt;")
+}
+
+tasks.test { useJUnitPlatform() }</code></pre>
+        </div>
+        <div class="decision">
+          <strong>Java version — це contract CI, не глобальна догма skill</strong>
+          Skill читає toolchain і pipeline: використовує найвищий LTS, який уже підтримує repository/CI. Java 11 не блокує migration; Java 17/21/25 відкриває сучасні language features, але агент не підвищує версію без явного repository рішення. <code>record</code> пропонується лише коли toolchain його підтримує.
+        </div>
+        <div class="grid grid--2">
+          <div class="card"><h3>Як виглядає setup у skill</h3><p>Agent читає <code>build.gradle(.kts)</code> або <code>pom.xml</code>, Java toolchain, dependency catalog і existing runner. Він не підставляє «latest» у новий dependency та не створює Maven поруч із Gradle.</p></div>
+          <div class="card"><h3>Уже зафіксований default</h3><p>JUnit 5 — для нового Java/Kotlin test code; TestNG — лише коли його вже потребує repository. Lombok спрощує DTO/test-data, але не створює page-object behavior. Build config лишається у Gradle Kotlin DSL або existing Maven, без другого build path і без <code>testng.xml</code>.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-7" data-title="EX-JAVA-01: parameterized">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-JAVA-01 · JUnit 5</p>
+        <h2>Параметризовані кейси: явні, immutable, з читабельним ID</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>package data;
+
+@Value
+@Builder
+final class InvalidLoginCase {
+  String caseId;
+  String email;
+  String password;
+  String expectedMessage;
+
+  @Override public String toString() { return caseId; }
+}
+
+@ParameterizedTest(name = "{0}")
+@MethodSource("invalidLoginCases")
+void rejectsInvalidCredentials(InvalidLoginCase targetCase) {
+  loginPage.open();
+  loginPage.loginAs(targetCase.getEmail(), targetCase.getPassword());
+  loginPage.validationMessageShouldBe(targetCase.getExpectedMessage());
+}</code></pre>
+          <div class="card">
+            <h3>Коли який source</h3>
+            <ul>
+              <li><code>@ValueSource</code> — один literal type.</li>
+              <li><code>@CsvSource</code> — мала literal table.</li>
+              <li><code>@MethodSource</code> — domain case object.</li>
+              <li><code>ParameterResolver</code> — shared dependency після source argument (наприклад Faker/session), не спосіб сховати case data.</li>
+              <li>Random/Faker entity не створюється під час static discovery — тільки в invocation або fixture.</li>
+              <li>Custom provider не робимо для one-off table.</li>
+            </ul>
+            <div class="decision"><strong>Рішення: approved</strong><span class="command">APPROVE EX-JAVA-01</span></div>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>static Stream&lt;InvalidLoginCase&gt; invalidLoginCases() {
+  return Stream.of(
+      InvalidLoginCase.builder()
+          .caseId("missing-email")
+          .email("")
+          .password("valid-password")
+          .expectedMessage("Email is required")
+          .build(),
+      InvalidLoginCase.builder()
+          .caseId("missing-password")
+          .email("qa@example.test")
+          .password("")
+          .expectedMessage("Password is required")
+          .build()
+  );
+}</code></pre>
+          <div class="card">
+            <h3>Що саме погоджується</h3>
+            <p>Не конкретний Lombok syntax. Погоджується вибір test-data shape: immutable domain case, stable report ID і одна behavior class на invocation.</p>
+            <pre class="code code-wrap"><code>@ExtendWith(FakerResolver.class)
+@ParameterizedTest(name = "invalid email: {0}")
+@ValueSource(strings = {"", "not-an-email"})
+void rejectsInvalidEmail(String targetEmail, Faker faker) {
+  loginPage.loginAs(targetEmail, faker.internet().password());
+}</code></pre>
+            <p><strong>Що має довести eval:</strong> for one literal value agent selects <code>@ValueSource</code>; for a domain object — <code>@MethodSource</code>; resolver injects a dependency only after source arguments; it does not add a custom provider or generate Faker data at collection time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-8" data-title="EX-JAVA-02: Selenide">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-JAVA-02 · Selenide</p>
+        <h2>UI page + components: scoped root, conditions замість sleeps</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>final class ProjectsPage {
+  private final ProjectsHeader header = new ProjectsHeader(
+      $("[data-testid='projects-header']")
+  );
+  private final ElementsCollection projectCards =
+      $$("[data-testid='project-card']");
+
+  ProjectsPage open() {
+    Selenide.open("/projects");
+    return this;
+  }
+
+  void isLoaded() {
+    $("h1").shouldHave(exactText("Projects"));
+    header.isLoaded();
+  }
+
+  void projectCountShouldBe(int expectedCount) {
+    projectCards.filter(visible).shouldHave(size(expectedCount));
+  }
+}
+
+final class ProjectsHeader {
+  private final SelenideElement root;
+  ProjectsHeader(SelenideElement root) { this.root = root; }
+  void isLoaded() {
+    root.shouldBe(visible);
+    root.$("[data-testid='project-search']").shouldBe(visible);
+  }
+  void searchFor(String projectName) {
+    root.$("[data-testid='project-search']").setValue(projectName);
+  }
+}</code></pre>
+          <div class="card">
+            <h3>Обов'язкові межі</h3>
+            <ul>
+              <li>Component має власний scoped root.</li>
+              <li>Кожен page/component має власний <code>isLoaded()</code> з ключовими елементами.</li>
+              <li><code>open()</code> лише navigates; scenario викликає <code>isLoaded()</code> явно, коли readiness є частиною test evidence.</li>
+              <li><code>shouldBe</code>/<code>shouldHave</code> — assertion і dynamic wait; не <code>getText()</code> + static assertion.</li>
+              <li><code>Thread.sleep</code> не комітимо.</li>
+              <li>Спершу semantic selector; якщо його нема — request на <code>data-testid</code>, ARIA або accessibility attribute.</li>
+              <li>XPath — тільки documented fallback, не default.</li>
+            </ul>
+            <div class="decision"><strong>Рішення: approved</strong><span class="command">APPROVE EX-JAVA-02</span></div>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>@Test
+void filtersProjectsByExactName() {
+  String targetProjectName = faker.company().name();
+  int expectedVisibleProjects = 1;
+
+  projectsPage.open();
+  projectsPage.isLoaded();
+  projectsPage.searchFor(targetProjectName);
+  projectsPage.projectCountShouldBe(expectedVisibleProjects);
+  projectsPage.projectNamed(targetProjectName).isLoaded();
+}</code></pre>
+          <div class="card">
+            <h3>Сценарій для trace review</h3>
+            <p>Якщо action timeout або page readiness нестабільні, агент спочатку збирає screenshot/log/trace-equivalent evidence. Тільки коли видно, що preloader реально блокує потрібний control, додається narrow <code>shouldBe(hidden)</code> в конкретний <code>isLoaded()</code>.</p>
+            <p><strong>Що має довести eval:</strong> overlap names (`Alpha`, `Alpha Pro`) не дають first-match; відсутній <code>Thread.sleep</code>; selector читається і scoped від component root.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-9" data-title="EX-JAVA-03: JUnit extension">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-JAVA-03 · JUnit lifecycle</p>
+        <h2>Role/precondition — через JUnit 5 extension, не через BaseTest</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>// Prefer the smallest seam that fits.
+// Start here when one shared before/after is enough:
+
+final class BrowserExtension implements BeforeEachCallback, AfterEachCallback {
+  @Override public void beforeEach(ExtensionContext context) {
+    Selenide.open("/");
+  }
+  @Override public void afterEach(ExtensionContext context) {
+    Selenide.closeWebDriver();
+  }
+}
+
+@ExtendWith(BrowserExtension.class)
+class ArchiveProjectTests {
+  @Test void adminCanArchiveProject() {
+    projectsPage.open();
+    projectsPage.isLoaded();
+    // visible business action + assertion
+  }
+}</code></pre>
+          <div class="card">
+            <h3>Що саме approve</h3>
+            <ul>
+              <li>Lifecycle/precondition живе в extension (або fixture-еквіваленті), не в <code>BaseTest</code>.</li>
+              <li>Test лишає visible scenario; setup/cleanup не ховається в inheritance.</li>
+              <li>Method-level annotation має пріоритет над class-level, <em>коли</em> annotation потрібна.</li>
+              <li><code>@RegisterExtension</code> / ParameterResolver / custom annotation — лише коли простішого <code>@ExtendWith</code> уже недостатньо.</li>
+              <li>Не додавати nested-class lookup і global auto-registration «наперед».</li>
+            </ul>
+            <div class="decision">
+              <strong>Рішення: CHANGE → approve; simpler examples</strong>
+              <span class="command">CHANGE EX-JAVA-03: keep extension-over-BaseTest; prefer simplest extension shape first</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>// Reject: lifecycle hidden in inheritance
+abstract class BaseTest {
+  @BeforeEach void loginAsAdmin() { /* hidden setup */ }
+}
+
+// Escalate only when role/options vary per test:
+@WithRole(Role.ADMIN)          // method wins over class
+class ArchiveProjectTests {
+  @Test void adminCanArchiveProject(UserSession session) { /* … */ }
+}</code></pre>
+          <div class="card">
+            <h3>Як агент застосує правило</h3>
+            <p>Спочатку пропонує мінімальний <code>@ExtendWith</code> з before/after. Annotation + ParameterResolver + store — другий крок, лише коли precondition справді варіюється per method/class.</p>
+            <p><strong>Що має довести eval:</strong> немає <code>BaseTest</code> для login/config; scenario лишається читабельним; складніший extension з’являється лише після доказу, що простого before/after недостатньо.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-10" data-title="EX-TESTNG-01: listener">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-TESTNG-01 · legacy boundary</p>
+        <h2>TestNG listener — lifecycle/reporting і reusable precondition, не прихований acceptance scenario</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>public final class FailureArtifactsListener implements ITestListener {
+  @Override
+  public void onTestFailure(ITestResult result) {
+    FailureArtifacts.captureFor(result);
+  }
+}
+
+@Listeners({FailureArtifactsListener.class, RolePreconditionListener.class})
+@WithRole(Role.ADMIN)
+class ProjectTests {
+  @Test
+  void createsProjectWithValidInput() {
+    // Business action and assertion are still visible here.
+  }
+}</code></pre>
+          <div class="card">
+            <h3>Boundary</h3>
+            <ul>
+              <li>New greenfield Java/Kotlin test default = JUnit 5.</li>
+              <li>Якщо repo уже на TestNG — лишаємось на TestNG і покращуємо його (listener, build config, data providers). Не мігруємо «потроху» без явного запиту.</li>
+              <li>Один раз запропонувати JUnit 5 migration можна; після явного «ні» — не піднімати знову в наступних сесіях/PR, поки користувач сам не попросить.</li>
+              <li>Не змішувати JUnit 5 і TestNG annotations у одному новому тесті.</li>
+              <li>Listener може reusable setup API/UI precondition (role/session/test environment) за явною annotation; він не містить business acceptance assertion і не маскує primary exception.</li>
+              <li>Runner налаштовується через Gradle/Maven; skill не створює <code>testng.xml</code>.</li>
+              <li><code>@DataProvider(parallel = true)</code> — тільки після доказу independent data, driver/context і cleanup.</li>
+            </ul>
+            <div class="decision">
+              <strong>Рішення: CHANGE → approve; respect TestNG stay</strong>
+              <span class="command">CHANGE EX-TESTNG-01: support existing TestNG; do not keep pushing JUnit 5 after user said no</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>@DataProvider(name = "projects", parallel = true)
+Object[][] projects() {
+  return TestDataSupplier.freshProjects(2)
+      .map(targetProject -&gt; new Object[] { targetProject })
+      .toArray(Object[][]::new);
+}
+
+@Test(dataProvider = "projects")
+void createsProject(ProjectInput targetProject) {
+  // independent test data + independent driver/context required
+}</code></pre>
+          <div class="card">
+            <h3>TestNG setup/precondition boundary</h3>
+            <pre class="code code-wrap"><code>// build.gradle.kts
+tasks.test {
+  useTestNG()
+}</code></pre>
+            <h3>Умова безпечної паралельності</h3>
+            <p>Parallel provider можливий тільки якщо кожна invocation має свій generated entity, browser/driver or API context, cleanup і не залежить від execution order.</p>
+            <p><strong>Що має довести eval:</strong> listener captures a failure artifact without replacing the scenario exception; explicit <code>@WithRole</code> can prepare a reusable role; turning on parallel mode cannot make two tests mutate the same resource; after a recorded «no» to JUnit 5 migration the agent continues improving TestNG instead of re-proposing the switch.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-11" data-title="TypeScript: setup">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">TypeScript · already approved contract</p>
+        <h2>Playwright Test — один runner, fixture-owned Application, strict flaky policy</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Setup</h3>
+            <pre class="code code-wrap"><code>npm init playwright@latest
+npm i -D @faker-js/faker
+npx playwright test
+npx playwright show-report</code></pre>
+            <p class="small muted">У prompt installer обираємо TypeScript, existing tests directory та browser install. Actual version завжди зчитуємо з lockfile перед зміною skill.</p>
+            <h3>Структура</h3>
+            <p><code>fixtures.ts</code> → <code>Application</code> → pages/components; локатори encapsulated; test бачить лише domain API.</p>
+            <p><strong>Fresh data:</strong> factory викликає Faker у test invocation; role/status/expected result лишаються explicit.</p>
+          </div>
+          <pre class="code"><code>// playwright.config.ts
+export default defineConfig({
+  retries: 1,
+  failOnFlakyTests: true, // Playwright 1.52+
+  use: {
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
+  },
+});
+
+// A retried pass is flaky and still fails CI.
+// Do not add preloader waits without trace evidence.</code></pre>
+        </div>
+        <div class="decision">
+          <strong>Already agreed</strong>
+          One retry; flaky tests remain failures; failed attempts retain trace, screenshot і video. Preloader invisibility enters <code>isLoaded()</code> only when a trace proves that it gates readiness.
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>// fixtures.ts
+type AppFixtures = { app: Application };
+export const test = base.extend&lt;AppFixtures&gt;({
+  app: async ({ page }, use) =&gt; {
+    await use(new Application(page));
+  },
+});
+
+export { expect } from "@playwright/test";</code></pre>
+          <div class="card">
+            <h3>Як це працює у реальному repo</h3>
+            <p>Fixture створює new <code>Application(page)</code> на кожен isolated test. Page objects не знають про credentials, environment config, reporters або global state.</p>
+            <p><strong>Що має довести eval:</strong> generated test uses the typed <code>app</code> fixture, has no constructor in a static page object, and fails a retrying pass when <code>failOnFlakyTests</code> is supported.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-12" data-title="TypeScript: page objects">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">TypeScript · agreed page object contract</p>
+        <h2>PageHolder + Application, arrow locator factories, components as fields</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>export abstract class PageHolder {
+  constructor(protected readonly page: Page) {}
+}
+
+export class Application extends PageHolder {
+  readonly projects = new ProjectsPage(this.page);
+}
+
+export class ProjectsPage extends PageHolder {
+  private readonly heading = (): Locator =&gt;
+    this.page.getByRole("heading", { name: "Projects", exact: true });
+  readonly header = new ProjectsHeader(this.page);
+  readonly grid = new ProjectGrid(this.page);
+
+  async open(): Promise&lt;void&gt; {
+    await this.page.goto("/projects");
+  }
+
+  async isLoaded(): Promise&lt;void&gt; {
+    await expect(this.heading()).toBeVisible();
+    await this.header.isLoaded();
+    await this.grid.isLoaded();
+  }
+}</code></pre>
+          <div class="card">
+            <h3>Що тест має бачити</h3>
+            <pre class="code code-wrap"><code>test("filters projects by exact name", async ({ app }) =&gt; {
+  const targetProjectName = "Manufacture light";
+  await test.step("Open the projects workspace", async () =&gt; {
+    await app.projects.open();
+    await app.projects.isLoaded();
+  });
+  await test.step("Filter projects by exact name", async () =&gt; {
+    await app.projects.searchFor(targetProjectName);
+  });
+  await app.projects.projectNamed(targetProjectName).isLoaded();
+});</code></pre>
+            <ul>
+              <li><strong>Constructor-free TypeScript rule:</strong> child page/component не пише власний constructor — arrow locator factories і components ініціалізуються як fields від <code>PageHolder.page</code>.</li>
+              <li>Кожен page/component має concrete <code>isLoaded()</code> з його key elements.</li>
+              <li><code>open()</code> лише navigates; test явно викликає <code>isLoaded()</code>, коли readiness має бути видимою у report/trace.</li>
+              <li>Не створювати <code>BasePage</code>, <code>AppPage</code> або universal click/fill wrappers.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>export class ProjectsHeader extends PageHolder {
+  private readonly root = (): Locator =&gt;
+    this.page.getByTestId("projects-header");
+  private readonly searchInput = (): Locator =&gt;
+    this.root().getByRole("searchbox", { name: "Search projects" });
+
+  async isLoaded(): Promise&lt;void&gt; {
+    await expect(this.root()).toBeVisible();
+    await expect(this.searchInput()).toBeVisible();
+  }
+
+  async searchFor(projectName: string): Promise&lt;void&gt; {
+    await this.searchInput().fill(projectName);
+  }
+}</code></pre>
+          <div class="card">
+            <h3>Сценарій для trace review</h3>
+            <p>Trace спочатку відповідає на питання «який state не готовий?». Лише після цього allowed додати <code>await expect(preloader()).toBeHidden()</code> до exact affected <code>isLoaded()</code>.</p>
+            <p><strong>Що має довести eval:</strong> no <code>waitForTimeout</code>, no blind <code>waitFor</code>; a selector is role/label/test-id based and the page verifies heading plus the components required for the journey.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-13" data-title="EX-PY-01: pytest cases">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-PY-01 · Python</p>
+        <h2>pytest + Playwright — immutable case data, stable IDs, one API style</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code># Setup
+uv add --dev pytest-playwright faker
+uv run playwright install
+uv run pytest
+
+@dataclass(frozen=True, slots=True)
+class InvalidLoginCase:
+    case_id: str
+    email: str
+    password: str
+    expected_message: str
+
+@pytest.mark.parametrize(
+    "case", INVALID_LOGIN_CASES,
+    ids=lambda case: case.case_id,
+)
+def test_rejects_invalid_credentials(
+    app: Application, case: InvalidLoginCase
+) -&gt; None:
+    app.login.open()
+    app.login.login_as(case.email, case.password)
+    app.login.validation_message_should_be(case.expected_message)</code></pre>
+          <div class="card">
+            <h3>Python rule</h3>
+            <ul>
+              <li>Playwright + pytest — default для нового web UI.</li>
+              <li>Sync і async API не змішувати в одному suite.</li>
+              <li>Selenium — тільки існуючий legacy suite або explicit migration boundary; не вести два паралельні UI stacks.</li>
+              <li>Mutable dict/list parameter cases не reuse між invocations.</li>
+              <li>Faker створює fresh entity data у test/fixture; expected boundary лишається explicit.</li>
+            </ul>
+            <div class="decision"><strong>Рішення: approved</strong><span class="command">APPROVE EX-PY-01</span></div>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>def build_project(faker: Faker, **overrides: object) -&gt; NewProject:
+    return NewProject(
+        name=overrides.get("name", faker.company()),
+        status=overrides.get("status", "active"),
+    )
+
+def test_creates_project(app: Application, faker: Faker) -&gt; None:
+    target_project = build_project(faker)
+    app.projects.open()
+    app.projects.create(target_project)
+    app.projects.project_named(target_project.name).should_be_visible()</code></pre>
+          <div class="card">
+            <h3>Що саме погоджується</h3>
+            <p>Faker працює для fresh non-semantic entity data на кожній invocation. Expected role, status, validation message і boundary value не стають випадковими.</p>
+            <p><strong>Що має довести eval:</strong> case ID стабільний у report, factory викликається у test/fixture, а не в module import; one failing parameter case дає зрозумілий name у report.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-14" data-title="EX-PY-02: pages">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-PY-02 · Python page objects</p>
+        <h2>Python page/components: narrow BasePage дозволений, generic helpers — ні</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>class ProjectsHeader:
+    def __init__(self, root: Locator) -&gt; None:
+        self._search_input = root.get_by_role(
+            "searchbox", name="Search projects"
+        )
+
+    def search_for(self, project_name: str) -&gt; None:
+        self._search_input.fill(project_name)
+
+class ProjectsPage:
+    def __init__(self, page: Page) -&gt; None:
+        self._page = page
+        self.header = ProjectsHeader(page.get_by_test_id("projects-header"))
+
+    def is_loaded(self) -&gt; None:
+        expect(self._page.get_by_role(
+            "heading", name="Projects", exact=True
+        )).to_be_visible()
+
+    def open(self) -&gt; None:
+        self._page.goto("/projects")</code></pre>
+          <div class="card">
+            <h3>Implementation boundary</h3>
+            <ul>
+              <li>Page owns components as fields; component owns a scoped locator.</li>
+              <li>Use Playwright <code>expect</code> for UI assertion, not text extraction before static assert.</li>
+              <li><code>is_loaded()</code> verifies the minimal invariant user-facing state.</li>
+              <li>Narrow <code>BasePage</code> може зберігати тільки platform dependency (<code>Page</code>) у repo, де це зменшує boilerplate; він не стає місцем для click/fill/assertion utilities.</li>
+              <li>Reusable domain behavior живе в named <code>common/</code> module біля сутності, не у звалищі <code>utils.py</code>.</li>
+              <li>When semantic locator is missing: propose `data-testid`/accessible name — do not reach for XPath first.</li>
+            </ul>
+            <div class="decision"><strong>Рішення: approved</strong><span class="command">APPROVE EX-PY-02</span></div>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>@pytest.fixture
+def app(page: Page) -&gt; Application:
+    return Application(page)
+
+def test_filters_projects_by_exact_name(
+    app: Application, faker: Faker
+) -&gt; None:
+    target_project = build_project(faker)
+    app.projects.open()
+    app.projects.is_loaded()
+    app.projects.search_for(target_project.name)
+    app.projects.project_named(target_project.name).should_be_visible()</code></pre>
+          <div class="card">
+            <h3>Python Selenium boundary</h3>
+            <p>Для нового Python web UI — Playwright + pytest. Selenium залишається лише у repository, де він уже є: skill спершу стабілізує або пропонує small migration до approved style, але не створює другу паралельну suite.</p>
+            <p><strong>Code-review contract:</strong> review посилається на approved Python template (test/page/component) і повертає мінімальний <code>CHANGE</code>; він не переписує repo «під стиль» без approval.</p>
+            <p><strong>Що має довести eval:</strong> chosen API is consistently sync або async, page owns components by aggregation, and the proposed selector/testability change is explicit instead of an XPath workaround.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-15" data-title="EX-API-01: Playwright API">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-API-01 · agreed transport default</p>
+        <h2>API: Playwright APIRequestContext за замовчуванням; Axios — лише existing exception</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Playwright APIRequestContext</h3>
+            <p><strong>Default</strong> для нових TypeScript API tests: спільний request fixture, auth/trace/reporting model і same toolchain as E2E.</p>
+            <pre class="code code-wrap"><code>class ProjectsApi {
+  constructor(private readonly request: APIRequestContext) {}
+  async create(target: NewProject): Promise&lt;Project&gt; {
+    const response = await this.request.post("/projects", { data: target });
+    await expect(response).toBeOK();
+    return response.json();
+  }
+}</code></pre>
+          </div>
+          <div class="card">
+            <h3>Axios</h3>
+            <p>Лише для standalone API-only module, де repo already owns Axios and adding Playwright would create a second runner. Не ховаємо два transports за одним interface.</p>
+            <pre class="code code-wrap"><code>const http = axios.create({ baseURL, timeout: 10_000 });
+
+const buildProject = (overrides: Partial&lt;NewProject&gt; = {}): NewProject =&gt; ({
+  name: faker.company.name(),
+  ...overrides,
+});
+
+class ProjectsApi {
+  async create(target: NewProject): Promise&lt;Project&gt; {
+    const response = await http.post&lt;Project&gt;("/projects", target);
+    expect(response.status).toBe(201);
+    return response.data;
+  }
+}</code></pre>
+          </div>
+        </div>
+        <div class="decision">
+          <strong>Рішення: approved</strong>
+          Новий API skill починає з Playwright request fixture. Axios лишається compatibility choice existing API-only repo; агент не додає його у shared E2E suite і не створює transport wrapper. Python у Playwright suite follows the same rule via its request context.
+          <br><span class="command">APPROVE EX-API-01</span>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>type ApiFixtures = {
+  projects: ProjectsApi;
+  createProject: (target: NewProject) =&gt; Promise&lt;Project&gt;;
+};
+
+const test = base.extend&lt;ApiFixtures&gt;({
+  projects: async ({ request }, use) =&gt; use(new ProjectsApi(request)),
+  createProject: async ({ projects }, use) =&gt; {
+    let createdProjectId: string | undefined;
+    await use(async (target) =&gt; {
+      const created = await projects.create(target);
+      createdProjectId = created.id;
+      return created;
+    });
+    if (createdProjectId) await projects.delete(createdProjectId);
+  },
+});</code></pre>
+          <div class="card">
+            <h3>Fixture cleanup contract</h3>
+            <p>Fixture owns the resource it creates and tears it down after the test. Cleanup failure must not hide the primary scenario failure. Multi-resource cleanup tries every cleanup and aggregates errors.</p>
+            <p><strong>Що має довести eval:</strong> success client asserts its expected success status, negative test uses a separate raw/negative method, unique test data is generated once, and created state is removed unless environment is explicitly disposable.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-16" data-title="Java API + Faker">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Already approved reference</p>
+        <h2>Java API: REST Assured controller + typed response; Faker на кожен запуск</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>@Value
+@Builder
+class SuiteAttributes {
+  String title;
+  String description;
+}
+
+final class SuiteData {
+  static SuitesRequest create(String title, String description) {
+    return SuitesRequest.builder()
+        .datas(DataDetail.builder()
+            .type("suite")
+            .attributes(SuiteAttributes.builder()
+                .title(title)
+                .description(description)
+                .build())
+            .build())
+        .build();
+  }
+}</code></pre>
+          <div class="card">
+            <h3>Test shape</h3>
+            <pre class="code code-wrap"><code>@Test
+void createsSuite() {
+  String targetTitle = faker.book().title();
+  SuitesRequest targetSuite = SuiteData.create(
+      targetTitle, faker.book().genre()
+  );
+
+  SuiteResponse createdSuite = suites.create(targetSuite)
+      .shouldHaveStatus(201)
+      .as(SuiteResponse.class);
+  createdSuite.shouldHaveTitle(targetTitle);
+}</code></pre>
+            <ul>
+              <li>Data builder — simple factory for one entity, not a global factory framework.</li>
+              <li>Faker changes non-semantic data; expected status, role and boundary stay explicit.</li>
+              <li>Success client і negative/raw response path — different methods, no ambiguous contract.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>final class ResponseDecorator {
+  private final Response response;
+  ResponseDecorator(Response response) { this.response = response; }
+
+  ResponseDecorator shouldHaveStatus(int expectedStatus) {
+    response.then().statusCode(expectedStatus);
+    return this;
+  }
+
+  &lt;T&gt; T as(Class&lt;T&gt; responseType) {
+    return response.as(responseType);
+  }
+}
+
+final class SuitesController {
+  ResponseDecorator create(SuitesRequest targetSuite) {
+    return new ResponseDecorator(given()
+        .contentType("application/vnd.api+json")
+        .body(targetSuite)
+        .post("/suites"));
+  }
+}
+
+// Scenario stays readable:
+SuiteResponse storedSuite = suites.get(createdSuite.getId());
+SuiteResponseAssert.assertThat(storedSuite)
+    .hasTitle(targetTitle);</code></pre>
+          <div class="card">
+            <h3>Response decorator contract</h3>
+            <p><code>data/</code> owns simple entity builders; controller owns request execution; response decorator performs the explicit status assertion and deserializes only after it. Test chooses the expected status, then receives a typed response for domain assertion.</p>
+            <p>One narrow transport/auth base may exist only if concrete repositories already require it; it must not absorb data builders, credentials or scenario assertions.</p>
+            <p><strong>Що має довести eval:</strong> API test reads as test → domain action → typed response → domain assertion; an unauthenticated negative case calls the same controller but asserts the expected error deliberately.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-17" data-title="EX-MOBILE-01: стратегія">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-MOBILE-01 · mobile strategy</p>
+        <h2>Native first: XCUITest / Kakao / Detox. Appium — cross-platform fallback.</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Selection rule</h3>
+            <ul>
+              <li><strong>iOS native:</strong> XCUITest.</li>
+              <li><strong>Android native:</strong> Kakao, not raw Espresso as the public skill surface.</li>
+              <li><strong>React Native:</strong> Detox.</li>
+              <li><strong>Cross-platform / existing shared suite:</strong> Appium only if its value exceeds native coverage cost; це найнижчий priority.</li>
+              <li>Accessibility IDs and other native locators are OK; <strong>XPath never</strong> — improve testability first.</li>
+            </ul>
+          </div>
+          <div class="card card--decision">
+            <h3>API-first pre/postcondition (Mobile API precondition contract)</h3>
+            <ul>
+              <li>Спочатку автоматизуй/використовуй <strong>backend/API</strong> для setup і cleanup mobile сценаріїв.</li>
+              <li>Окремий vendor/team з власними automation tools і testers — допустимий виняток; інакше API до максимуму.</li>
+              <li><strong>Precondition:</strong> створити стан через API/GraphQL/gateway seam.</li>
+              <li><strong>Postcondition:</strong> прибрати стан через той самий seam — спрощує flaky UI cleanup.</li>
+              <li>UI перевіряє user-visible journey, не будує довгий state кліками.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Deep links + local system context</h3>
+            <ul>
+              <li>Деталізувати <strong>deep links</strong>, щоб відкривати потрібний screen швидко, без навігаційного шуму.</li>
+              <li>Просити clone <strong>локально поруч</strong> із autotest repo усього, що автоматизується: mobile app, frontend, BFF/proxy, GraphQL/gateway, backend services, DB-related repos — system under test для LLM context.</li>
+              <li>З цього context — пропозиції з <strong>testability</strong> (IDs, deep links, API seams).</li>
+              <li>Це правило переважно для <strong>architecture / structure agent</strong>, не для кожного language skill agent.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Mobile decision tree</h3>
+            <ol>
+              <li>Чи є API/OpenAPI/GraphQL seam для pre/postcondition? Якщо так — використати його.</li>
+              <li>iOS native → XCUITest · Android native → Kakao · RN → Detox.</li>
+              <li>Deep link / accessibility ID відсутні? Запропонувати product-side testability change.</li>
+              <li>Appium — лише коли shared cross-platform suite реально дешевший за native duplication.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="decision">
+          <strong>Рішення: CHANGE → approve; API-first + local context</strong>
+          <span class="command">CHANGE EX-MOBILE-01: native-first; maximize API pre/post; deep links; clone related SUT repos for architecture agent context</span>
+          <br>Що має довести eval: mobile scenario не будує state довгими UI кліками коли API доступне; deep link або documented entry screen використано де можливо; після «окремий vendor owns backend automation» агент не нав’язує API ownership; architecture agent просить local clones і пропонує testability, language agents не дублюють цей discovery кожен раз.
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-18" data-title="EX-CS-01: C#">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-CS-01 · proposed .NET convention</p>
+        <h2>C#: Playwright .NET + NUnit, explicit page API, Faker-equivalent fresh data</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Setup у конкретному repo</h3>
+            <pre class="code code-wrap"><code>dotnet new nunit&#10;dotnet add package Microsoft.Playwright.NUnit&#10;dotnet add package Bogus&#10;dotnet build&#10;pwsh bin/Debug/&lt;target&gt;/playwright.ps1 install&#10;dotnet test</code></pre>
+            <ul>
+              <li><code>PageTest</code> із framework package — допустимий stable platform base; не створюємо власний <code>BaseTest</code>/<code>BasePage</code>.</li>
+              <li><code>Bogus.Faker</code> створює fresh non-semantic entity data; expected status/role/boundary лишаються explicit.</li>
+              <li>Наявний NUnit/MSTest/xUnit runner має перевагу над новою стандартизацією.</li>
+            </ul>
+          </div>
+          <pre class="code"><code>public sealed class ProjectsTests : PageTest&#10;{&#10;  private readonly Faker faker = new();&#10;&#10;  [Test]&#10;  public async Task FiltersProjectsByExactName()&#10;  {&#10;    var targetProjectName = faker.Company.CompanyName();&#10;    var app = new Application(Page);&#10;&#10;    await app.Projects.OpenAsync();&#10;    await app.Projects.IsLoadedAsync();&#10;    await app.Projects.SearchForAsync(targetProjectName);&#10;    await Expect(app.Projects.ProjectNamed(targetProjectName)).ToBeVisibleAsync();&#10;  }&#10;}</code></pre>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>public sealed class ProjectsPage&#10;{&#10;  private readonly IPage page;&#10;  public ProjectsPage(IPage page) =&gt; this.page = page;&#10;&#10;  private ILocator Heading =&gt; page.GetByRole(&#10;    AriaRole.Heading, new() { Name = "Projects", Exact = true }&#10;  );&#10;  public Task OpenAsync() =&gt; page.GotoAsync("/projects");&#10;  public Task IsLoadedAsync() =&gt; Assertions.Expect(Heading).ToBeVisibleAsync();&#10;  public Task SearchForAsync(string projectName) =&gt;&#10;    page.GetByRole(AriaRole.Searchbox).FillAsync(projectName);&#10;  public ILocator ProjectNamed(string name) =&gt;&#10;    page.GetByRole(AriaRole.Row, new() { Name = name, Exact = true });&#10;}</code></pre>
+          <div class="card">
+            <h3>Boundary</h3>
+            <p>Composition root (<code>Application</code>) wires pages. Constructor injection is allowed there because .NET needs an <code>IPage</code>; it does not justify an inheritance tree or universal click/fill wrappers.</p>
+            <p><strong>Що має довести eval:</strong> test uses Playwright async <code>Expect</code>, no sleep/static text assert, and data factory runs per test invocation.</p>
+            <div class="decision"><strong>Рішення: approved</strong><span class="command">APPROVE EX-CS-01</span></div>
+          </div>
+        </div>
+        <p class="small muted">Primary source: <a href="https://playwright.dev/dotnet/docs/writing-tests">Playwright .NET — Writing tests</a>.</p>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-19" data-title="EX-IOS-01: XCUITest">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-IOS-01 · native iOS</p>
+        <h2>XCUITest: accessibility identifiers, dynamic existence checks, API-owned test data</h2>
+        <div class="grid grid--2">
+          <pre class="code"><code>final class ProjectsUITests: XCTestCase {&#10;  private let testData = ProjectsTestData()&#10;&#10;  func testFiltersProjectsByExactName() async throws {&#10;    let targetProject = try await testData.createProject()&#10;    testData.ownForCleanup(targetProject.id)&#10;&#10;    let app = XCUIApplication()&#10;    app.launch()&#10;    let projects = ProjectsScreen(app: app)&#10;&#10;    XCTAssertTrue(projects.isLoaded())&#10;    projects.searchFor(targetProject.name)&#10;    XCTAssertTrue(projects.project(named: targetProject.name)&#10;      .waitForExistence(timeout: 5))&#10;  }&#10;}</code></pre>
+          <div class="card">
+            <h3>Setup і selector contract</h3>
+            <ul>
+              <li>Додаємо Xcode UI Test Target; test запускається через <code>xcodebuild test</code> у існуючій scheme.</li>
+              <li>Stable <code>accessibilityIdentifier</code> preferred; інші native XCUITest queries (label, type, predicate без XPath) — OK.</li>
+              <li><strong>XPath заборонений.</strong> Якщо locator нестабільний — спочатку improve testability (ID/deep link), не обходити XPath.</li>
+              <li><code>waitForExistence</code> — dynamic readiness check; ніколи не <code>sleep</code>.</li>
+              <li>API fixture створює/прибирає data; UI test лишає UI journey і visible outcome.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <pre class="code"><code>struct ProjectsScreen {&#10;  let app: XCUIApplication&#10;  private var heading: XCUIElement {&#10;    app.staticTexts["projects.title"]&#10;  }&#10;  private var searchField: XCUIElement {&#10;    app.searchFields["projects.search"]&#10;  }&#10;&#10;  func isLoaded() -&gt; Bool {&#10;    heading.waitForExistence(timeout: 5)&#10;      &amp;&amp; searchField.waitForExistence(timeout: 5)&#10;  }&#10;  func searchFor(_ projectName: String) {&#10;    searchField.tap()&#10;    searchField.typeText(projectName)&#10;  }&#10;  func project(named name: String) -&gt; XCUIElement {&#10;    app.staticTexts[name]&#10;  }&#10;}</code></pre>
+          <div class="card">
+            <h3>Mobile API precondition contract</h3>
+            <p>Перед real implementation skill просить Swagger/OpenAPI або service repository і exact test seam. Без цього він не вигадує backend state через UI clicks і не обіцяє cleanup.</p>
+            <p><strong>Що має довести eval:</strong> accessibility/native locator читається, no XPath/sleep, missing testability → product-side proposal first, API fixture owns cleanup even when UI assertion fails.</p>
+            <div class="decision"><strong>Рішення: CHANGE → approve; no XPath</strong><span class="command">CHANGE EX-IOS-01: native/accessibility locators OK; never XPath; improve testability first</span></div>
+          </div>
+        </div>
+        <p class="small muted">Primary source: <a href="https://developer.apple.com/documentation/XCUIAutomation">Apple XCUIAutomation / XCTest</a>.</p>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-20" data-title="EX-ANDROID-01: Kakao">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-ANDROID-01 · native Android</p>
+        <h2>Kakao DSL для Android native; raw Espresso не є public default</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Setup у View-based Android repo</h3>
+            <pre class="code code-wrap"><code>dependencies {&#10;  androidTestImplementation(&#10;    "io.github.kakaocup:kakao:&lt;pinned&gt;"&#10;  )&#10;}</code></pre>
+            <ul>
+              <li>Для Compose використовуємо відповідний Kakao Compose surface; не змішуємо його з View DSL у одному page object.</li>
+              <li>Resource IDs, content descriptions та інші native Kakao/Espresso matchers — OK.</li>
+              <li><strong>XPath заборонений.</strong> Немає стабільного locator → improve testability (ID/contentDescription/deep link), не XPath workaround.</li>
+              <li>Espresso idling синхронізує UI; не додаємо <code>Thread.sleep</code>.</li>
+            </ul>
+          </div>
+          <pre class="code"><code>class ProjectsScreen : KScreen&lt;ProjectsScreen&gt;() {&#10;  override val layoutId: Int? = R.layout.screen_projects&#10;  val searchInput = KEditText { withId(R.id.projects_search) }&#10;  fun projectNamed(name: String) = KTextView { withText(name) }&#10;}&#10;&#10;@Test&#10;fun filtersProjectsByExactName() {&#10;  val targetProject = testData.createProject()&#10;  cleanup.own(targetProject.id)&#10;&#10;  onScreen&lt;ProjectsScreen&gt; {&#10;    searchInput.replaceText(targetProject.name)&#10;    projectNamed(targetProject.name) { isDisplayed() }&#10;  }&#10;}</code></pre>
+        </div>
+        <div class="grid grid--2">
+          <div class="card card--decision">
+            <h3>Як це застосовує skill</h3>
+            <p>Спершу визначає View чи Compose, existing Android test runner та API seam. Потім створює page/component DSL з domain action; не переносить Selenium/Appium locators у native test.</p>
+            <p><strong>Що має довести eval:</strong> test data created through API, one scoped Kakao screen, native ID/content description/matcher used, no raw Espresso helpers as public default, never XPath — missing locator becomes a testability proposal.</p>
+          </div>
+          <div class="decision"><strong>Рішення: CHANGE → approve; no XPath</strong><span class="command">CHANGE EX-ANDROID-01: native locators OK; never XPath; improve testability first</span><br>Appium лишається fallback, коли one cross-platform suite справді переважає native coverage — не як спосіб обійти відсутню testability.</div>
+        </div>
+        <p class="small muted">Primary source: <a href="https://kakaocup.github.io/Compose/docs/introduction/">Kakao documentation</a>.</p>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-21" data-title="EX-RN-01: Detox">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-RN-01 · React Native</p>
+        <h2>Detox: testID-first React Native E2E, API pre/postconditions, no arbitrary waits</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Setup</h3>
+            <pre class="code code-wrap"><code>npm i -D detox jest @faker-js/faker&#10;npx detox init&#10;npx detox build -c ios.sim.debug&#10;npx detox test -c ios.sim.debug</code></pre>
+            <ul>
+              <li>React Native component forwards unique <code>testID</code> to a native view; native Detox matchers (id, label, traits) — OK.</li>
+              <li><strong>XPath заборонений.</strong> Text-only/XPath workarounds не комітимо; спочатку improve testability (<code>testID</code>/deep link).</li>
+              <li>Detox controls synchronization with app async work; no <code>waitForTimeout</code> equivalent.</li>
+              <li>Runner/build configuration stays in the existing RN repo; do not create a parallel mobile test project.</li>
+            </ul>
+          </div>
+          <pre class="code"><code>const projectsScreen = {&#10;  searchInput: () =&gt; element(by.id("projects.search")),&#10;  projectRow: (projectId: string) =&gt;&#10;    element(by.id(`projects.row.${projectId}`)),&#10;};&#10;&#10;describe("Projects", () =&gt; {&#10;  let targetProject: Project | undefined;&#10;&#10;  beforeEach(async () =&gt; {&#10;    targetProject = await projectsApi.create(buildProject(faker));&#10;    await device.launchApp({ newInstance: true });&#10;  });&#10;  afterEach(async () =&gt; {&#10;    if (targetProject) await projectsApi.delete(targetProject.id);&#10;  });&#10;&#10;  it("shows the project created through API", async () =&gt; {&#10;    await projectsScreen.searchInput().replaceText(targetProject!.name);&#10;    await expect(projectsScreen.projectRow(targetProject!.id)).toBeVisible();&#10;  });&#10;});</code></pre>
+        </div>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Boundary</h3>
+            <p>Detox is native-first for React Native. Appium is not introduced merely because iOS and Android both exist; choose it only after demonstrating that native/RN coverage duplication costs more than the shared suite.</p>
+            <p><strong>Що має довести eval:</strong> <code>testID</code> or other native matcher is used, fixture cleanup occurs, visible assertion, and no XPath/sleep workaround — missing testability becomes an explicit product-side proposal.</p>
+          </div>
+          <div class="decision"><strong>Рішення: CHANGE → approve; no XPath</strong><span class="command">CHANGE EX-RN-01: native locators OK; never XPath; improve testability first</span><br>Skill asks for RN version, existing build config, API/OpenAPI seam and test environment before changing a repository.</div>
+        </div>
+        <p class="small muted">Primary sources: <a href="https://wix.github.io/Detox/docs/introduction/getting-started/">Detox getting started</a> and <a href="https://wix.github.io/Detox/docs/guide/test-id/">Detox testID guidance</a>.</p>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-22" data-title="EX-CONTRACT-01: schema validation">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-CONTRACT-01 · API contract validation</p>
+        <h2>Runtime models плюс OpenAPI/schema validation — не «contract-first або нічого»</h2>
+        <div class="grid grid--3">
+          <div class="card">
+            <h3>Python · Pydantic</h3>
+            <pre class="code code-wrap"><code>class Project(BaseModel):&#10;    id: UUID&#10;    name: str&#10;&#10;project = Project.model_validate(&#10;    response.json()&#10;)</code></pre>
+            <p>Typed response is immediately useful for API and mobile preconditions.</p>
+          </div>
+          <div class="card">
+            <h3>Java/Kotlin · Jackson/Moshi</h3>
+            <pre class="code code-wrap"><code>Project project = mapper.readValue(&#10;    response.asString(),&#10;    Project.class&#10;);</code></pre>
+            <p>DTO is data; response decorator still asserts the exact HTTP status first.</p>
+          </div>
+          <div class="card">
+            <h3>TypeScript · schema parser</h3>
+            <pre class="code code-wrap"><code>const ProjectSchema = z.object({&#10;  id: z.string().uuid(),&#10;  name: z.string().min(1),&#10;});&#10;const project = ProjectSchema.parse(&#10;  await response.json()&#10;);</code></pre>
+            <p>Use the existing schema library; do not add one only for a single literal assertion.</p>
+          </div>
+        </div>
+        <div class="grid grid--2">
+          <div class="card card--decision">
+            <h3>OpenAPI/schema validation boundary</h3>
+            <p>Runtime model validation proves what this test client consumes. OpenAPI/JSON Schema validation additionally proves that a response matches the published endpoint schema. Use both when an <code>openapi.yaml</code> or supplied schema is an actual source of truth.</p>
+            <p>Skill does not invent a consumer/provider contract, nor does it claim that a DTO alone validates a public API contract.</p>
+          </div>
+          <div class="decision"><strong>Рішення: approved</strong><span class="command">APPROVE EX-CONTRACT-01</span><br><strong>Що має довести eval:</strong> malformed response fails model/schema validation with a useful path; expected status is explicit; no schema is invented when the service exposes none.</div>
+        </div>
+        <p class="small muted">Primary sources: <a href="https://docs.pydantic.dev/">Pydantic</a>, <a href="https://json-schema.org/">JSON Schema</a>, <a href="https://github.com/networknt/json-schema-validator">networknt Java validator</a>.</p>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-23" data-title="EX-CI-01: fail-fast">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">EX-CI-01 · regression operating contract</p>
+        <h2>Fail-fast CI gate: tiny environment proof перед повною regression</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Pipeline order</h3>
+            <ol>
+              <li>Install/build/typecheck — dependency and runner health.</li>
+              <li><strong>Preflight</strong> — one or a few isolated tests prove base URL, auth/test data seam and a critical read/write path in the controlled test environment.</li>
+              <li>Full regression — starts only when preflight is green; shard/parallelism comes after isolation evidence.</li>
+            </ol>
+            <p>Preflight failure is a signal to stop: it must not consume CI on a full suite that cannot be trusted.</p>
+          </div>
+          <pre class="code"><code># Same intent, runner-specific command&#10;npx playwright test tests/preflight --workers=1&#10;uv run pytest tests/preflight -q&#10;./gradlew test --tests "*Preflight*"&#10;dotnet test --filter "FullyQualifiedName~Preflight"&#10;&#10;# full-regression job needs: preflight</code></pre>
+        </div>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>What qualifies as preflight</h3>
+            <ul>
+              <li>Small, deterministic and independently cleaned-up.</li>
+              <li>Uses the same credentials/base URL/artifact wiring as regression.</li>
+              <li>Does not mutate production and does not depend on the rest of the suite.</li>
+              <li>Retries are not used to hide environment failure.</li>
+            </ul>
+          </div>
+          <div class="decision"><strong>Рішення: approved · Fail-fast CI gate</strong><span class="command">APPROVE EX-CI-01</span><br><strong>Що має довести eval:</strong> a deliberately broken base URL/auth fails in preflight before regression; green preflight permits the full runner; a flaky retry still fails under the agreed Playwright policy.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-24" data-title="Відкриті питання">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Open-question ledger</p>
+        <h2>Що ще потрібно перед repository-level implementation</h2>
+        <div class="grid grid--2">
+          <div class="card">
+            <h3>Input для конкретного repository</h3>
+            <ul>
+              <li><strong>Repo contract:</strong> manifest/lockfile, test runner, CI workflow і current code style.</li>
+              <li><strong>Backend seam:</strong> Swagger/OpenAPI, concrete service repository або supported test API for pre/postconditions.</li>
+              <li><strong>Test environment:</strong> safe base URL, credentials/roles, cleanup ownership і allowed data mutation.</li>
+              <li><strong>Mobile:</strong> target app type, existing Xcode/Gradle/RN build config і device matrix.</li>
+              <li><strong>C#:</strong> exact target framework and existing NUnit/MSTest/xUnit choice; generic example does not override it.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Operating context, який не можна вигадати</h3>
+            <ul>
+              <li><strong>Performance:</strong> load model, SLO/target environment, observability and controlled-load permission; course notes can inform the proposal but cannot replace them.</li>
+              <li><strong>CI preflight:</strong> exact smallest safe test per environment and branch-protection wiring.</li>
+              <li><strong>Contract validation:</strong> published OpenAPI/schema location and compatibility owner; otherwise only runtime model validation is honest.</li>
+              <li><strong>Testability change:</strong> developer contribution path for test IDs/accessibility attributes when semantic locator is absent.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="decision">
+          <strong>Вже вирішено цим review</strong>
+          Агрегація/composition default (language-agnostic); language constructor/PageHolder seams у language skills; JUnit 5 default for greenfield, TestNG stays when already present (no JUnit 5 nag after «no»); Playwright API default; Playwright/pytest для нового Python UI; native-first mobile with maximize API pre/post + deep links + local SUT clones for architecture agent; runtime model + schema validation; CI preflight before regression. Тепер потрібен context для застосування, не нові абстрактні стандарти.
+        </div>
+        <div class="table-scroll">
+          <table class="matrix">
+            <thead><tr><th>Питання</th><th>Мій default</th><th>Відповідь, яку чекаємо</th></tr></thead>
+            <tbody>
+              <tr><td>C#/mobile repository</td><td>Docs-based candidate already exists; repo keeps its own runner/version.</td><td>URL or local checkout + CI command.</td></tr>
+              <tr><td>Backend/OpenAPI</td><td>API fixture owns pre/postconditions and cleanup.</td><td>Swagger URL or service repo/test seam.</td></tr>
+              <tr><td>Performance</td><td>Workload model comes from real use, target and telemetry.</td><td>Load model, SLO, target environment, observability and permission.</td></tr>
+              <tr><td>CI gate</td><td>Preflight runs before regression, with no retry masking infra.</td><td>Current CI workflow and one candidate preflight journey.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-25" data-title="32 planned skills">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Roadmap, not approvals</p>
+        <h2>32 planned skills — backlog; code review consumes approved language templates</h2>
+        <div class="grid grid--3">
+          <div class="card"><h3>Strategy & reliability</h3><p class="small">discover-automation-architecture<br>choose-automation-stack<br>review-testability<br>audit-assertions-and-synchronization<br>audit-selectors<br>diagnose-flaky-test<br>evaluate-automation-skill<br><br>Review mode compares code to approved test/page/component templates and proposes a minimal refactor; it never rewrites the repo silently.</p></div>
+          <div class="card"><h3>Web & Java/Kotlin</h3><p class="small">playwright-python<br>playwright-dotnet<br>selenide-java<br>refactor-selenium-to-selenide<br>junit-java<br>testng-java<br>junit5-kotlin</p></div>
+          <div class="card"><h3>Backend & mobile</h3><p class="small">api-automation<br>backend-automation<br>api-contract-testing<br>xcuitest-ios<br>kakao-android<br>detox-react-native<br>choose-mobile-automation-stack<br>appium-mobile</p></div>
+          <div class="card"><h3>Business journeys</h3><p class="small">cucumber-business-journeys<br><br>Only when a cross-team business goal needs shared executable evidence; never as a default UI test layer.</p></div>
+          <div class="card"><h3>Performance</h3><p class="small">grill-performance-strategy<br>model-performance-workload<br>k6-performance<br>jmeter-java-dsl<br>guide-jmeter-gui-authoring<br>setup-performance-observability<br>analyze-performance-run</p></div>
+          <div class="card"><h3>Maintainer</h3><p class="small">ingest-reference-repository<br>curate-automation-knowledge<br><br>Need evidence and evaluation contracts before promotion.</p></div>
+        </div>
+        <p class="muted small">Після approval прикладу skill ще не promoted: він проходить red/green evaluation і forward test окремим small PR slice.</p>
+        <div class="grid grid--3">
+          <div class="card"><h3>Ready for review</h3><p class="small">Shared rules, Java four-pack, Python, Playwright API, C#, native mobile, contract validation and CI gate now have proposal candidates. Approval still precedes a skill change.</p></div>
+          <div class="card"><h3>Needs repository before a PR</h3><p class="small">C#, XCUITest, Kakao, Detox, backend automation, contract and CI need exact runner/version/service seam. Docs-based examples guide the proposal; they do not override a working repository.</p></div>
+          <div class="card"><h3>Needs operating context</h3><p class="small">Performance skills: real workload, SLO, target environment, observability і permission to run controlled load.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-26" data-title="Команди для review">
+      <div class="slide__inner">
+        <p class="slide__eyebrow">Ready for your reply</p>
+        <h2>Почни з короткого core batch</h2>
+        <div class="grid grid--2">
+          <div class="card card--accent">
+            <h3>Batch 1 — shared rules</h3>
+            <pre class="code code-wrap"><code>CHANGE EX-ARCH-01: language-agnostic composition; language seams stay in language skills
+APPROVE EX-NAME-01</code></pre>
+            <p class="small muted">Batch 1 status: ARCH changed (architecture-only); NAME approved.</p>
+            <p>Архітектура спільна для всіх мов; TS/Java/Python constructor і platform seams — у відповідних language batches.</p>
+          </div>
+          <div class="card">
+            <h3>Batch 2 — Java four-pack</h3>
+            <pre class="code code-wrap"><code>APPROVE EX-JAVA-01
+APPROVE EX-JAVA-02
+APPROVE EX-JAVA-03
+APPROVE EX-TESTNG-01</code></pre>
+            <p class="small muted">Batch 2 status: JAVA-01/02 approved; JAVA-03 і TESTNG-01 changed (simpler examples; respect TestNG stay).</p>
+            <p>Java version stays repository/CI-driven; Lombok stays DTO/test-data only. Existing TestNG suites stay on TestNG; do not keep pushing JUnit 5 after an explicit no.</p>
+          </div>
+          <div class="card">
+            <h3>Batch 3 — Python</h3>
+            <pre class="code code-wrap"><code>APPROVE EX-PY-01
+APPROVE EX-PY-02</code></pre>
+            <p class="small muted">Batch 3 status: PY-01 і PY-02 approved.</p>
+            <p>Рекомендований default: Playwright + pytest; Selenium — existing legacy/migration only.</p>
+          </div>
+          <div class="card">
+            <h3>Batch 4 — API + mobile strategy</h3>
+            <pre class="code code-wrap"><code>APPROVE EX-API-01
+APPROVE EX-MOBILE-01</code></pre>
+            <p class="small muted">Batch 4 status: API-01 approved; MOBILE-01 changed (API-first + local SUT context).</p>
+            <p>Playwright API is default; mobile is native-first, maximizes API pre/postconditions, uses deep links, and asks architecture agent to clone related SUT repos locally.</p>
+          </div>
+          <div class="card">
+            <h3>Batch 5 — C# + native examples</h3>
+            <pre class="code code-wrap"><code>APPROVE EX-CS-01
+APPROVE EX-IOS-01
+APPROVE EX-ANDROID-01
+APPROVE EX-RN-01</code></pre>
+            <p class="small muted">Batch 5 status: CS-01 approved; IOS/ANDROID/RN changed (native locators OK; never XPath; testability first).</p>
+            <p>These are conventions. Accessibility/native matchers are fine; XPath is never the answer — propose testability first. Before a repository PR, adapt only to its real runner, framework version, build and service seam.</p>
+          </div>
+          <div class="card">
+            <h3>Batch 6 — contract + CI</h3>
+            <pre class="code code-wrap"><code>APPROVE EX-CONTRACT-01
+APPROVE EX-CI-01</code></pre>
+            <p class="small muted">Batch 6 status: CONTRACT-01 і CI-01 approved. Review complete.</p>
+            <p>Schema validation needs a real schema source; preflight needs one safe environment journey.</p>
+          </div>
+        </div>
+        <div class="decision">
+          <strong>Setup source of truth</strong>
+          Перед кожною зміною skill читаємо lockfile/manifest і CI конкретного репозиторію; офіційні setup guides: <a href="https://playwright.dev/docs/intro">Playwright TypeScript</a>, <a href="https://playwright.dev/python/docs/intro">Playwright Python</a>, <a href="https://playwright.dev/dotnet/docs/writing-tests">Playwright .NET</a>, <a href="https://selenide.org/documentation.html">Selenide</a>, <a href="https://developer.apple.com/documentation/XCUIAutomation">XCUITest</a>, <a href="https://kakaocup.github.io/Compose/docs/introduction/">Kakao</a>, <a href="https://wix.github.io/Detox/docs/introduction/getting-started/">Detox</a> і <a href="https://appium.io/docs/en/latest/quickstart/">Appium fallback</a>.
+        </div>
+        <div class="slide-actions"><button type="button" data-go="1">Повернутися до огляду</button></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const previous = document.getElementById('previous');
+    const next = document.getElementById('next');
+    const counter = document.getElementById('counter');
+    const slideSelect = document.getElementById('slide-select');
+    let activeIndex = 0;
+
+    slides.forEach((slide, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = `${index + 1}. ${slide.dataset.title}`;
+      slideSelect.append(option);
+    });
+
+    function showSlide(index, updateHash = true) {
+      activeIndex = Math.min(Math.max(index, 0), slides.length - 1);
+      slides.forEach((slide, slideIndex) => {
+        const active = slideIndex === activeIndex;
+        slide.classList.toggle('is-active', active);
+        slide.setAttribute('aria-hidden', String(!active));
+      });
+      previous.disabled = activeIndex === 0;
+      next.disabled = activeIndex === slides.length - 1;
+      counter.textContent = `${activeIndex + 1} / ${slides.length}`;
+      slideSelect.value = String(activeIndex);
+      if (updateHash) window.location.hash = `slide-${activeIndex + 1}`;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    previous.addEventListener('click', () => showSlide(activeIndex - 1));
+    next.addEventListener('click', () => showSlide(activeIndex + 1));
+    slideSelect.addEventListener('change', (event) => showSlide(Number(event.target.value)));
+    document.querySelectorAll('[data-go]').forEach((button) => {
+      button.addEventListener('click', () => showSlide(Number(button.dataset.go) - 1));
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.target instanceof HTMLSelectElement) return;
+      if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'j') showSlide(activeIndex + 1);
+      if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'k') showSlide(activeIndex - 1);
+      if (event.key.toLowerCase() === 'p') window.print();
+    });
+    window.addEventListener('hashchange', () => {
+      const target = Number(window.location.hash.replace('#slide-', '')) - 1;
+      if (Number.isInteger(target) && target >= 0 && target < slides.length && target !== activeIndex) {
+        showSlide(target, false);
+      }
+    });
+
+    const target = Number(window.location.hash.replace('#slide-', '')) - 1;
+    showSlide(Number.isInteger(target) && target >= 0 && target < slides.length ? target : 0, false);
+  </script>
+</body>
+</html>

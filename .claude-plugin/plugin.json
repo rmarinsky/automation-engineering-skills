@@ -1,0 +1,19 @@
+{
+  "name": "automation-engineering-skills",
+  "description": "Public skill pack for test automation architecture, naming, Java/Selenide/JUnit, Playwright Python/.NET, API clients, native mobile, contract validation, and CI fail-fast.",
+  "version": "0.1.0",
+  "author": {
+    "name": "rmarinsky"
+  },
+  "homepage": "https://github.com/rmarinsky/automation-engineering-skills",
+  "repository": "https://github.com/rmarinsky/automation-engineering-skills",
+  "license": "MIT",
+  "keywords": [
+    "automation",
+    "testing",
+    "playwright",
+    "selenide",
+    "skills"
+  ],
+  "skills": "./skills/"
+}
