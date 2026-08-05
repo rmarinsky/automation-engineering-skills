@@ -1,0 +1,39 @@
+{
+  "name": "automation-engineering-skills",
+  "version": "0.2.0",
+  "description": "Agent Skills + sdet-* agents for test automation (Cursor, Claude, Codex, …)",
+  "type": "module",
+  "bin": {
+    "automation-engineering-skills": "./scripts/install.mjs"
+  },
+  "files": [
+    "agents",
+    "skills",
+    "scripts/install.mjs",
+    "scripts/install-agents.mjs",
+    "scripts/verify-skills.mjs",
+    "docs/decisions-ledger.md",
+    "INSTALL.md",
+    "README.md",
+    "LICENSE",
+    ".cursor-plugin",
+    ".claude-plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rmarinsky/automation-engineering-skills.git"
+  },
+  "keywords": [
+    "agent-skills",
+    "sdet",
+    "test-automation",
+    "playwright",
+    "selenide",
+    "cursor",
+    "claude"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}

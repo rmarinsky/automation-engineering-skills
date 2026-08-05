@@ -1,96 +1,104 @@
-# How skills install (multi-agent) + how we publish
+# How skills + agents install (multi-agent) + how we publish
 
-This pack targets the **Agent Skills** open format (`SKILL.md` + YAML frontmatter), not Cursor alone. Same files; different install *paths* per harness.
+This pack targets the **Agent Skills** open format (`SKILL.md` + YAML frontmatter) plus thin **`sdet-*` subagents**. Skills are portable; agents are small markdown wrappers that route to those skills.
+
+## Simplest: one command (skills + agents)
+
+```bash
+npx -y github:rmarinsky/automation-engineering-skills
+```
+
+Global (all projects):
+
+```bash
+npx -y github:rmarinsky/automation-engineering-skills -- -g
+```
+
+That runs `scripts/install.mjs`, which:
+
+1. Installs every `skills/*/SKILL.md` via `npx skills add … --all`
+2. Symlinks `agents/sdet-*.md` into Cursor / Claude / Codex **agent** dirs
+
+Then invoke **`@sdet-lead`**.
+
+| Flag (after `--`) | Effect |
+|---|---|
+| `-g` / `--global` | User-level skills + agents |
+| `--agents-only` | Skip skills CLI |
+| `--skills-only` | Skip agent files |
+| `--copy` | Copy instead of symlink |
+
+## Why agents need a separate step from `npx skills`
+
+`npx skills` only discovers **`SKILL.md` trees**. It does **not** install `.cursor/agents/*.md`. Our installer bridges that gap in one UX.
+
+### Agent discovery paths
+
+| Harness | Project | User global |
+|---|---|---|
+| Cursor | `.cursor/agents/` | `~/.cursor/agents/` |
+| Claude Code | `.claude/agents/` | `~/.claude/agents/` |
+| Codex | `.codex/agents/` | `~/.codex/agents/` |
+
+Source of truth remains `./agents/*.md` in this repo.
+
+## Skills-only (ecosystem CLI)
+
+```bash
+npx skills add rmarinsky/automation-engineering-skills --all
+npx skills add rmarinsky/automation-engineering-skills -g --all
+npx skills add rmarinsky/automation-engineering-skills -a cursor -a claude-code -a codex -y
+```
 
 ## What is portable vs what is not
 
 | Portable (one source) | Not portable (per harness) |
 |---|---|
-| `skills/<name>/SKILL.md` content | Where that folder is discovered |
-| `name` + `description` frontmatter | Plugin marketplace UX (`/plugin`, `/add-plugin`) |
-| Optional `scripts/`, `references/` | Symlink vs copy into agent dirs |
+| `skills/<name>/SKILL.md` | Where that folder is discovered |
+| `agents/sdet-*.md` bodies | `.cursor/agents` vs `.claude/agents` vs `.codex/agents` |
+| `name` + `description` frontmatter | Plugin marketplace UX |
 
-So: **author once in `./skills/`**. Install adapters copy/symlink into each agent’s expected directory.
+## Skill discovery paths (project → user global)
 
-## Discovery paths (project → user global)
+| Agent | Project | User global |
+|---|---|---|
+| **Universal / Codex-leaning** | `.agents/skills/` | `~/.agents/skills/` |
+| **Cursor** | `.agents/skills/` (also reads `.cursor/`, `.claude/`, `.codex/`) | `~/.cursor/skills/` |
+| **Claude Code** | `.claude/skills/` | `~/.claude/skills/` |
+| **Codex** | `.agents/skills/` or `.codex/skills/` | `~/.codex/skills/` |
 
-| Agent | Project | User global | Install UX |
-|---|---|---|---|
-| **Universal / Codex-leaning** | `.agents/skills/` | `~/.agents/skills/` | open standard home |
-| **Cursor** | `.cursor/skills/` (also reads `.agents/`, `.claude/`, `.codex/`) | `~/.cursor/skills/` | Marketplace `/add-plugin`, Remote GitHub, or `npx skills` |
-| **Claude Code** | `.claude/skills/` | `~/.claude/skills/` | `/plugin marketplace add` + `/plugin install`, or `npx skills` |
-| **Codex CLI/App** | `.agents/skills/` or `.codex/skills/` | `~/.codex/skills/` | Official plugins marketplace, or `npx skills` |
-| **OpenCode / Gemini / Copilot CLI / Factory / Pi / …** | harness-specific under project | harness-specific under `$HOME` | plugin command **or** `npx skills -a …` |
-
-Cursor is unusually broad: it also loads Claude/Codex dirs. Claude Code historically does **not** scan `.agents/skills/` — it wants `.claude/skills/`. That mismatch is why a universal installer matters.
-
-## Simplest public install for everyone
-
-Use the ecosystem CLI ([vercel-labs/skills](https://github.com/vercel-labs/skills) / [skills.sh](https://skills.sh)):
-
-```bash
-# After this repo is public on GitHub:
-npx skills add rmarinsky/automation-engineering-skills --all
-```
-
-What that does:
-
-1. Clones/resolves the GitHub repo  
-2. Finds every `skills/*/SKILL.md`  
-3. Detects agents on the machine  
-4. Symlinks (or copies) into each agent’s skills directory  
-
-Useful variants:
-
-```bash
-# Global (all projects on this machine)
-npx skills add rmarinsky/automation-engineering-skills -g --all
-
-# Only Cursor + Claude Code + Codex
-npx skills add rmarinsky/automation-engineering-skills -a cursor -a claude-code -a codex -y
-
-# One skill only
-npx skills add rmarinsky/automation-engineering-skills -s compose-test-architecture -g -y
-```
-
-This is the **one command for everyone** path. Plugin marketplaces are optional extras on top.
+Claude Code wants `.claude/skills/` (not `.agents/skills/` alone). That mismatch is why `npx skills` matters.
 
 ## Optional: per-harness plugin wrappers
-
-Kept for people who prefer marketplace UX (same `./skills/` tree):
 
 | File | Audience |
 |---|---|
 | `.cursor-plugin/plugin.json` | Cursor Marketplace / `/add-plugin` |
 | `.claude-plugin/plugin.json` | Claude Code `/plugin install` |
 
-Pattern used by packs like Superpowers: thin manifests + one skills tree + README install section per harness.
-
-## Repo-local (no personal install)
-
-For a product repo that should carry skills for Cloud Agents / teammates:
+## Repo-local (vendored)
 
 ```bash
-# Canonical for many agents:
 cp -R skills/. /path/to/app/.agents/skills/
-
-# Or symlink:
-ln -s /path/to/automation-engineering-skills/skills /path/to/app/.agents/skills
+cp agents/*.md /path/to/app/.cursor/agents/
+# Claude:
+cp agents/*.md /path/to/app/.claude/agents/
 ```
 
-Claude-only repos may also need `.claude/skills/` (symlink to the same tree). Cursor often picks up `.agents/skills/` already.
+Or from a clone: `node scripts/install-agents.mjs` inside the app directory.
 
-## Publish checklist (public)
+## Publish checklist
 
-1. Keep **only** `./skills/*/SKILL.md` as the source of truth (no duplicated skill bodies).  
-2. Push a **public** GitHub repo.  
-3. Tell users: `npx skills add rmarinsky/automation-engineering-skills --all`  
-4. List on [skills.sh](https://skills.sh) when ready.  
-5. Optionally submit Cursor + Claude plugin manifests for marketplace one-click.  
-6. Tag releases (`v0.1.0`…) and bump plugin `version` fields together.
+1. `./skills/*/SKILL.md` + `./agents/*.md` as sources of truth (no forked skill text in agents).  
+2. Public GitHub repo.  
+3. Document one-shot: `npx -y github:rmarinsky/automation-engineering-skills`  
+4. Also: `npx skills add rmarinsky/automation-engineering-skills --all`  
+5. List on [skills.sh](https://skills.sh) when ready.  
+6. Tag releases; bump `package.json` + plugin `version` together.
 
 ## What we will not do
 
 - Maintain separate Cursor-only vs Claude-only skill text.  
-- Ask users to install 14 skills by hand.  
-- Rely on Team Marketplace alone (that is private org distribution, not public).
+- One agent per stack (stack routing lives in `sdet-engineer`).  
+- Ask users to copy 16 skills and 4 agents by hand.  
+- Rely on Team Marketplace alone for public distribution.
