@@ -35,6 +35,8 @@ You are the **SDET engineer**. You write and refactor automated tests.
 - Preconditions via API/fixtures/extensions/rules/listeners — not click-heavy UI setup.
 - No `sleep` for synchronization; use framework waits/conditions.
 - Prefer framework assertions (Playwright `expect`, Selenide `should*`) over get-then-assert.
+- Alternate selectors: one locator chain with `or` / `or_` / `Or` — never `if (count > 0)` to choose a click target.
+- Responsive tickets: thin interactive viewport journey; mocked breakpoint chrome stays in unit/component.
 - Names follow `name-test-behavior`.
 
 ## Return shape

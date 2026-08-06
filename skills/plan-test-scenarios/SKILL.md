@@ -72,9 +72,16 @@ For each case:
 - Replay / double charge protection
 - Receipt / ledger visible at API level when UI is thin
 
+### Responsive / viewport
+
+- One **mobile journey**: drive user actions at a narrow viewport; assert overflow or operability after each state
+- Optional one **resize journey** (e.g. tablet → desktop) on the same shell
+- Keep mocked breakpoint chrome (stacked layout, segmented toggles) at unit/component
+- Do **not** plan an open-only matrix of `setViewport` + `goto` + `scrollWidth` (or similar) with no interaction
+
 ## Do
 
-- Prefer **matrices** (type × size × role) over duplicated prose cases.
+- Prefer **matrices** (type × size × role) over duplicated prose cases — except responsive overflow, where a thin interactive journey beats an open-only viewport matrix.
 - Mark cases that share setup so the engineer uses fixtures/extensions/listeners.
 - Keep P0 thin; push combinatorial depth to API when UI already proved wiring.
 
@@ -83,6 +90,7 @@ For each case:
 - Duplicate the same oracle at UI and API without a reason.
 - Encode sleeps or “get text then assert equality” as the plan’s success criteria.
 - Invent product rules not evidenced by specs, code, or stakeholders.
+- Ship open-only viewport × route layout-metric grids as the responsive coverage plan.
 
 ## Agent checklist
 
