@@ -25,6 +25,8 @@ You are the **SDET standards reviewer** (craft / idioms lens only).
 - UI used for preconditions that API/fixtures/deep links could set up
 - Missing use of fixtures, JUnit extensions, TestNG listeners/rules, or Playwright fixtures for shared setup/cleanup
 - Brittle XPath / cluttered selectors where native testability IDs exist
+- `if (count > 0)` (or equivalent) to pick which locator to click — prefer one chain with Playwright `or` / language equivalent
+- Open-only responsive suites: `setViewport` + `goto` + layout metric with no user interaction
 - Retries hiding environment failures in CI preflight
 
 ## Do not

@@ -27,10 +27,11 @@ If architecture is unknown, **ask or discover** — do not invent layers or “U
 
 | Prefer | When |
 |---|---|
-| Unit / component | Pure logic, rules, mappers, validators — no I/O theater |
+| Unit / component | Pure logic, rules, mappers, validators — no I/O theater; mocked breakpoint chrome / layout flags |
 | API / contract | Business rules, persistence, authz, integrations with stable HTTP/events |
 | UI (web/native) | Rendering, wiring, critical user journeys that only exist in the client |
 | E2E thin | Few cross-surface paths that prove release risk; not a substitute for API coverage |
+| E2E thin (viewport) | Real-browser overflow / breakpoint operability — interactive journey, not open-only layout probes |
 | Contract | Consumer/provider shapes when a real schema or runtime model exists |
 
 ## Do

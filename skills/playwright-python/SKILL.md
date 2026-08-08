@@ -25,6 +25,8 @@ Decisions: **EX-PY-01**, **EX-PY-02**.
 - A narrow `BasePage` may hold only the platform `Page` dependency — never click/fill/assert utilities.
 - Put reusable domain behavior in named `common/` modules, not a junk `utils.py`.
 - Missing semantic locator → propose `data-testid` / accessible name; do not reach for XPath first.
+- Transitional dual selectors: `locator.or_(other)` as one chain — never `if locator.count() > 0` to pick a click target.
+- Responsive coverage: thin interactive viewport journey; not an open-only `set_viewport_size` + goto + scrollWidth matrix.
 
 ## Eval
 

@@ -20,6 +20,8 @@ Decision: **EX-CS-01**.
 - Composition root (`Application`) wires pages; constructor injection of `IPage` is fine there.
 - Use Playwright async `Expect` — no sleep / static text assert as the primary UI oracle.
 - Data factory runs per test invocation.
+- Transitional dual selectors: `Locator.Or(...)` as one chain — never `if (await locator.CountAsync() > 0)` to pick a click target.
+- Responsive coverage: thin interactive viewport journey; not an open-only SetViewportSize + Goto + ScrollWidth matrix.
 
 ## Eval
 
