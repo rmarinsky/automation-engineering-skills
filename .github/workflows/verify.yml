@@ -1,0 +1,35 @@
+name: Verify
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate release classification
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: node scripts/verify-pr-title.mjs "$PR_TITLE"
+      - run: node scripts/verify-skills.mjs
+      - run: node --test scripts/*.test.mjs
+      - run: node docs/verify-automation-skills-approval-review.mjs
+      - run: npm pack --dry-run --json
+      - name: Check whitespace
+        run: git diff --check "${{ github.event.pull_request.base.sha }}...${{ github.sha }}"

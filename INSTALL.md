@@ -99,7 +99,9 @@ Or from a clone: `node scripts/install-agents.mjs` inside the app directory.
 3. Document one-shot: `npx -y github:rmarinsky/automation-engineering-skills`  
 4. Also: `npx skills add rmarinsky/automation-engineering-skills --all`  
 5. List on [skills.sh](https://skills.sh) when ready.  
-6. Tag releases; bump `package.json` + plugin `version` together.
+6. Release Please keeps `package.json`, plugin versions, changelog, tags and
+   GitHub Releases synchronized; use Conventional Commit PR titles and squash
+   merge. See [README.md](README.md#release-automation).
 
 ## What we will not do
 
