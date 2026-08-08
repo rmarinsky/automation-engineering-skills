@@ -1,7 +1,7 @@
 {
   "name": "automation-engineering-skills",
-  "version": "0.2.0",
-  "description": "Agent Skills + sdet-* agents for test automation (Cursor, Claude, Codex, …)",
+  "version": "0.3.0",
+  "description": "Agent Skills for code quality and test automation, with read-only and SDET agents (Cursor, Claude, Codex, …)",
   "type": "module",
   "bin": {
     "automation-engineering-skills": "./scripts/install.mjs"
@@ -25,6 +25,9 @@
   },
   "keywords": [
     "agent-skills",
+    "code-smells",
+    "refactoring",
+    "design-patterns",
     "sdet",
     "test-automation",
     "playwright",

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Install sdet-* agent markdown into Cursor / Claude / Codex agent dirs.
+ * Install pack agent markdown into Cursor / Claude / Codex agent dirs.
  *
  *   node scripts/install-agents.mjs
  *   node scripts/install-agents.mjs -g
@@ -94,4 +94,4 @@ for (const dir of targets()) {
   }
 }
 
-console.log("Done. Invoke @sdet-lead in Cursor / Claude / Codex.");
+console.log("Done. Invoke @sdet-lead or @code-quality-reviewer in Cursor / Claude / Codex.");

@@ -2,7 +2,7 @@
 
 Source review: [automation-skills-approval-review.html](./automation-skills-approval-review.html)
 
-Status: **all 16 review IDs resolved**. Skills promote only after RED eval + skill change + `node scripts/verify-skills.mjs`.
+Status: **all 20 promoted IDs resolved**. Skills promote only after RED eval + skill change + `node scripts/verify-skills.mjs`.
 
 ## Decisions
 

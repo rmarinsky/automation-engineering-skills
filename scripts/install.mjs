@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * One-shot installer: skills (via npx skills) + sdet agents.
+ * One-shot installer: skills (via npx skills) + pack agents.
  *
  *   npx -y github:rmarinsky/automation-engineering-skills
  *   npx -y github:rmarinsky/automation-engineering-skills -- -g
@@ -53,12 +53,12 @@ if (doAgents) {
   const agentArgs = [];
   if (global) agentArgs.push("-g");
   if (copy) agentArgs.push("--copy");
-  console.log("→ Installing sdet agents …");
+  console.log("→ Installing agents …");
   run(process.execPath, [join(here, "install-agents.mjs"), ...agentArgs]);
 }
 
 console.log(`
 Installed. Next:
   • Skills are available to your coding agents
-  • Call @sdet-lead (or the Task/subagent picker) for plan → implement → dual review → PR
+  • Call @sdet-lead for test automation or @code-quality-reviewer for read-only code review
 `);

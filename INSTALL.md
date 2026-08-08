@@ -1,6 +1,8 @@
 # How skills + agents install (multi-agent) + how we publish
 
-This pack targets the **Agent Skills** open format (`SKILL.md` + YAML frontmatter) plus thin **`sdet-*` subagents**. Skills are portable; agents are small markdown wrappers that route to those skills.
+This pack targets the **Agent Skills** open format (`SKILL.md` + YAML frontmatter)
+plus thin read-only/code-quality and **`sdet-*` agents**. Skills are portable;
+agents are small markdown wrappers that route to those skills.
 
 ## Simplest: one command (skills + agents)
 
@@ -17,9 +19,10 @@ npx -y github:rmarinsky/automation-engineering-skills -- -g
 That runs `scripts/install.mjs`, which:
 
 1. Installs every `skills/*/SKILL.md` via `npx skills add … --all`
-2. Symlinks `agents/sdet-*.md` into Cursor / Claude / Codex **agent** dirs
+2. Symlinks `agents/*.md` into Cursor / Claude / Codex **agent** dirs
 
-Then invoke **`@sdet-lead`**.
+Then invoke **`@sdet-lead`** for test automation or
+**`@code-quality-reviewer`** for read-only production/test code review.
 
 | Flag (after `--`) | Effect |
 |---|---|
@@ -55,7 +58,7 @@ npx skills add rmarinsky/automation-engineering-skills -a cursor -a claude-code 
 | Portable (one source) | Not portable (per harness) |
 |---|---|
 | `skills/<name>/SKILL.md` | Where that folder is discovered |
-| `agents/sdet-*.md` bodies | `.cursor/agents` vs `.claude/agents` vs `.codex/agents` |
+| `agents/*.md` bodies | `.cursor/agents` vs `.claude/agents` vs `.codex/agents` |
 | `name` + `description` frontmatter | Plugin marketplace UX |
 
 ## Skill discovery paths (project → user global)
