@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -181,6 +181,45 @@ for (const reference of requiredReferences) {
   assert.ok(existsSync(join(skillsRoot, reference)), `Missing reference: ${reference}`);
 }
 
+const smellCatalog = readFileSync(
+  join(skillsRoot, "diagnose-code-smells/references/smell-catalog.md"),
+  "utf8",
+);
+assert.equal(
+  smellCatalog.match(/^### /gm)?.length,
+  23,
+  "Smell catalog must contain exactly 23 entries",
+);
+
+const refactoringCatalog = readFileSync(
+  join(skillsRoot, "refactor-code-safely/references/refactoring-catalog.md"),
+  "utf8",
+);
+for (const group of [
+  "Composing methods (9)",
+  "Moving features between objects (8)",
+  "Organizing data (15)",
+  "Simplifying conditionals (8)",
+  "Simplifying calls (14)",
+  "Generalization (12)",
+]) {
+  assert.ok(refactoringCatalog.includes(`## ${group}`), `Missing refactoring group: ${group}`);
+}
+const refactoringRows = [...refactoringCatalog.matchAll(/^\| ([^|]+) \|/gm)]
+  .map((match) => match[1].trim())
+  .filter((name) => name !== "Refactoring" && name !== "---");
+assert.equal(refactoringRows.length, 66, "Refactoring catalog must contain exactly 66 entries");
+
+const patternCatalog = readFileSync(
+  join(skillsRoot, "select-design-pattern/references/pattern-catalog.md"),
+  "utf8",
+);
+const patternRows = [...patternCatalog.matchAll(/^\| ([^|]+) \|/gm)]
+  .map((match) => match[1].trim())
+  .filter((name) => name !== "Pattern" && name !== "---");
+assert.equal(patternRows.length, 22, "Pattern catalog must contain exactly 22 entries");
+assert.ok(!patternRows.includes("Interpreter"), "Interpreter must remain out of the v1 catalog");
+
 const agentFiles = readdirSync(agentsRoot)
   .filter((file) => file.endsWith(".md"))
   .sort();
@@ -191,6 +230,14 @@ assert.deepEqual(agentFiles, [
   "sdet-lead.md",
   "sdet-standards-reviewer.md",
 ]);
+for (const file of agentFiles) {
+  const content = readFileSync(join(agentsRoot, file), "utf8");
+  assert.doesNotMatch(
+    content,
+    /skills\/[^\s`]+\/SKILL\.md/,
+    `${file} must route by installed skill ID, not a repository-relative path`,
+  );
+}
 
 const qualityReviewer = readFileSync(join(agentsRoot, "code-quality-reviewer.md"), "utf8");
 assert.ok(qualityReviewer.includes("readonly: true"), "code-quality-reviewer must be read-only");
@@ -212,15 +259,24 @@ function filesUnder(directory) {
   });
 }
 
-for (const file of [
-  ...filesUnder(skillsRoot),
-  ...filesUnder(agentsRoot),
-  ...filesUnder(join(root, "docs")),
-]) {
+const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+const publishedFiles = packageJson.files.flatMap((entry) => {
+  const path = join(root, entry);
+  assert.ok(existsSync(path), `Published package entry missing: ${entry}`);
+  return statSync(path).isDirectory() ? filesUnder(path) : [path];
+});
+for (const file of publishedFiles) {
   assert.ok(!/\.(pdf|zip)$/i.test(file), `Source artifact must not be packaged: ${file}`);
 }
 
-const packageJson = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+assert.ok(
+  packageJson.files.includes("evals"),
+  "Published package must include evals referenced by the skills contract",
+);
+for (const guide of ["README.md", "INSTALL.md"]) {
+  const content = readFileSync(join(root, guide), "utf8");
+  assert.doesNotMatch(content, /16 skills|4 agents/, `${guide} contains stale package counts`);
+}
 const cursorPlugin = JSON.parse(readFileSync(join(root, ".cursor-plugin/plugin.json"), "utf8"));
 const claudePlugin = JSON.parse(readFileSync(join(root, ".claude-plugin/plugin.json"), "utf8"));
 for (const [name, version] of [

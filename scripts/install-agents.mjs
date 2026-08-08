@@ -11,11 +11,12 @@ import {
   readdirSync,
   symlinkSync,
   copyFileSync,
-  rmSync,
-  existsSync,
   lstatSync,
+  readFileSync,
+  readlinkSync,
+  constants as fsConstants,
 } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
 
@@ -50,29 +51,56 @@ function agentFiles() {
     .sort();
 }
 
+function destinationState(dest, src) {
+  try {
+    const stat = lstatSync(dest);
+    if (stat.isSymbolicLink()) {
+      return resolve(dirname(dest), readlinkSync(dest)) === resolve(src)
+        ? "installed"
+        : "conflict";
+    }
+    if (stat.isFile() && readFileSync(dest).equals(readFileSync(src))) {
+      return "installed";
+    }
+    return "conflict";
+  } catch (error) {
+    if (error?.code === "ENOENT") return "absent";
+    throw error;
+  }
+}
+
+function copyExclusive(src, dest) {
+  try {
+    copyFileSync(src, dest, fsConstants.COPYFILE_EXCL);
+  } catch (error) {
+    if (error?.code === "EEXIST") {
+      throw new Error(`Refusing to overwrite an agent file created during install: ${dest}`);
+    }
+    throw error;
+  }
+}
+
 function installOne(destDir, file) {
   mkdirSync(destDir, { recursive: true });
   const src = join(agentsSrc, file);
   const dest = join(destDir, file);
-  if (existsSync(dest)) {
-    rmSync(dest, { force: true });
-  } else {
-    try {
-      lstatSync(dest);
-      rmSync(dest, { force: true });
-    } catch {
-      /* absent */
-    }
-  }
+  if (destinationState(dest, src) === "installed") return `already installed → ${dest}`;
   if (copy) {
-    copyFileSync(src, dest);
+    copyExclusive(src, dest);
     return `copy → ${dest}`;
   }
   try {
     symlinkSync(src, dest);
     return `symlink → ${dest}`;
-  } catch {
-    copyFileSync(src, dest);
+  } catch (error) {
+    if (error?.code === "EEXIST") {
+      throw new Error(`Refusing to overwrite an agent file created during install: ${dest}`);
+    }
+    const fallbackCodes = ["EACCES", "EINVAL", "ENOSYS", "ENOTSUP", "EOPNOTSUPP", "EPERM"];
+    if (!fallbackCodes.includes(error?.code)) {
+      throw error;
+    }
+    copyExclusive(src, dest);
     return `copy(fallback) → ${dest}`;
   }
 }
@@ -83,12 +111,24 @@ if (files.length === 0) {
   process.exit(1);
 }
 
+const destinationDirs = targets();
+const conflicts = destinationDirs.flatMap((dir) =>
+  files
+    .map((file) => ({ file, dest: join(dir, file), src: join(agentsSrc, file) }))
+    .filter(({ dest, src }) => destinationState(dest, src) === "conflict"),
+);
+if (conflicts.length > 0) {
+  console.error("Refusing to overwrite unmanaged agent files:");
+  for (const { dest } of conflicts) console.error(`  ${dest}`);
+  process.exit(1);
+}
+
 const scope = global ? "global ($HOME)" : `project (${cwd})`;
 console.log(
   `Installing ${files.length} agents (${scope}${copy ? ", copy" : ", symlink"})`,
 );
 
-for (const dir of targets()) {
+for (const dir of destinationDirs) {
   for (const file of files) {
     console.log(`  ${installOne(dir, file)}`);
   }

@@ -44,6 +44,8 @@ Then invoke **`@sdet-lead`** for test automation or
 | Codex | `.codex/agents/` | `~/.codex/agents/` |
 
 Source of truth remains `./agents/*.md` in this repo.
+The installer keeps matching managed files and refuses to overwrite a different
+agent file; move or rename that collision before retrying.
 
 ## Skills-only (ecosystem CLI)
 
@@ -103,5 +105,5 @@ Or from a clone: `node scripts/install-agents.mjs` inside the app directory.
 
 - Maintain separate Cursor-only vs Claude-only skill text.  
 - One agent per stack (stack routing lives in `sdet-engineer`).  
-- Ask users to copy 16 skills and 4 agents by hand.  
+- Ask users to copy every skill and agent by hand.
 - Rely on Team Marketplace alone for public distribution.

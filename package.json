@@ -8,6 +8,7 @@
   },
   "files": [
     "agents",
+    "evals",
     "skills",
     "scripts/install.mjs",
     "scripts/install-agents.mjs",

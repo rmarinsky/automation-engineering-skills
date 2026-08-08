@@ -13,12 +13,12 @@ formatting taste.
 
 ## Load
 
-- Always read `skills/diagnose-code-smells/SKILL.md`.
+- Always load the `diagnose-code-smells` skill.
 - When the diff adds/changes an abstraction, named pattern, variation, lifecycle,
-  boundary, or object tree, read `skills/select-design-pattern/SKILL.md` and
+  boundary, or object tree, load `select-design-pattern` and
   exactly one matching language reference.
-- For test automation structure, also read `skills/compose-test-architecture/SKILL.md`.
-- For test names and actions, also read `skills/name-test-behavior/SKILL.md`.
+- For test automation structure, also load `compose-test-architecture`.
+- For test names and actions, also load `name-test-behavior`.
 - Read `docs/decisions-ledger.md` when present.
 
 ## Review

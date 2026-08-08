@@ -12,10 +12,10 @@ You are the **SDET design reviewer** (structure / reuse lens only).
 
 ## Load
 
-- `skills/diagnose-code-smells/SKILL.md`
-- `skills/compose-test-architecture/SKILL.md`
-- `skills/name-test-behavior/SKILL.md`
-- `skills/select-design-pattern/SKILL.md` plus exactly one language reference only
+- `diagnose-code-smells`
+- `compose-test-architecture`
+- `name-test-behavior`
+- `select-design-pattern` plus exactly one language reference only
   when the change adds/changes an abstraction, named pattern, lifecycle, boundary, or object tree
 - `docs/decisions-ledger.md` when present
 
