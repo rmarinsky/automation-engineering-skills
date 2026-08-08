@@ -14,6 +14,7 @@
     "scripts/install-agents.mjs",
     "scripts/verify-skills.mjs",
     "docs/decisions-ledger.md",
+    "CHANGELOG.md",
     "INSTALL.md",
     "README.md",
     "LICENSE",

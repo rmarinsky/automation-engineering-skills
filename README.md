@@ -78,6 +78,29 @@ node scripts/verify-skills.mjs
 node docs/verify-automation-skills-approval-review.mjs
 ```
 
+## Release automation
+
+`Release Please` runs after every merge to `main`. It opens or updates a
+release PR, updates `package.json` and both plugin manifests, writes the
+changelog, then creates the `vX.Y.Z` tag and GitHub Release when that release
+PR is merged.
+
+Use a Conventional Commit title and squash merge so the released commit keeps
+its classification:
+
+| PR title | Version effect |
+|---|---|
+| `fix(scope): ...`, `perf(scope): ...`, `refactor(scope): ...` | patch |
+| `feat(scope): ...` | minor |
+| `type(scope)!: ...` | breaking; major after `1.0.0`, minor while `0.x` |
+| `docs:`, `test:`, `build:`, `ci:`, `chore:` | no release |
+
+Set a repository `RELEASE_PLEASE_TOKEN` secret to a least-privilege GitHub App
+token or fine-grained PAT when bot-created release PRs must run CI without a
+manual workflow approval. Without it, the workflow falls back to
+`GITHUB_TOKEN`; tags and releases remain managed by Release Please, but GitHub
+may require a maintainer to approve the bot PR's checks.
+
 ## Source-material boundary
 
 The pack contains original instructions and examples only. Purchased books,

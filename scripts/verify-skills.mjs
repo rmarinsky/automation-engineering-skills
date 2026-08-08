@@ -279,12 +279,16 @@ for (const guide of ["README.md", "INSTALL.md"]) {
 }
 const cursorPlugin = JSON.parse(readFileSync(join(root, ".cursor-plugin/plugin.json"), "utf8"));
 const claudePlugin = JSON.parse(readFileSync(join(root, ".claude-plugin/plugin.json"), "utf8"));
+assert.match(
+  packageJson.version,
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/,
+  "package version must be valid SemVer",
+);
 for (const [name, version] of [
-  ["package", packageJson.version],
   ["Cursor plugin", cursorPlugin.version],
   ["Claude plugin", claudePlugin.version],
 ]) {
-  assert.equal(version, "0.3.0", `${name} version must be 0.3.0`);
+  assert.equal(version, packageJson.version, `${name} version must match package version`);
 }
 
 console.log(`skills contract: valid (${required.length} decision IDs, ${skillDirs.length} skills)`);
