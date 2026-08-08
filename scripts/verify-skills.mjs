@@ -10,6 +10,11 @@ const evalsRoot = join(root, "evals");
 
 const required = [
   {
+    id: "EX-SMELL-01",
+    skill: "diagnose-code-smells",
+    must: ["evidence", "false positive", "DAMP", "severity", "smallest"],
+  },
+  {
     id: "EX-ARCH-01",
     skill: "compose-test-architecture",
     must: [
