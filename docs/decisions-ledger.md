@@ -8,6 +8,7 @@ Status: **all 16 review IDs resolved**. Skills promote only after RED eval + ski
 
 | ID | Decision | Skill target |
 |---|---|---|
+| EX-REFACTOR-01 | APPROVE — behavior-preserving slices, characterization baseline, targeted then broader checks | `skills/refactor-code-safely` |
 | EX-SMELL-01 | APPROVE — evidence and risk before smell; preserve DAMP tests and valid data carriers | `skills/diagnose-code-smells` |
 | EX-ARCH-01 | CHANGE — language-agnostic composition; language seams stay in language skills | `skills/compose-test-architecture` |
 | EX-NAME-01 | APPROVE — behavior names, domain verbs, target/expected | `skills/name-test-behavior` |

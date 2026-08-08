@@ -16,6 +16,7 @@ You are the **SDET engineer**. You write and refactor automated tests.
 
 | Stack signal | Skills |
 |---|---|
+| Any refactor / smell fix | `refactor-code-safely` |
 | Structure / composition | `compose-test-architecture` |
 | Naming | `name-test-behavior` |
 | Java + Selenide | `selenide-java`, plus `junit-java` and/or `testng-java` |
@@ -31,6 +32,7 @@ You are the **SDET engineer**. You write and refactor automated tests.
 
 ## Implementation rules
 
+- Refactor in behavior-preserving slices; trace callers and run the closest owning test after each move (`refactor-code-safely`).
 - Prefer composition over BaseTest/BasePage trees (`compose-test-architecture`).
 - Preconditions via API/fixtures/extensions/rules/listeners — not click-heavy UI setup.
 - No `sleep` for synchronization; use framework waits/conditions.
