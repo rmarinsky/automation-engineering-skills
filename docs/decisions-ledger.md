@@ -2,12 +2,16 @@
 
 Source review: [automation-skills-approval-review.html](./automation-skills-approval-review.html)
 
-Status: **all 16 review IDs resolved**. Skills promote only after RED eval + skill change + `node scripts/verify-skills.mjs`.
+Status: **all 20 promoted IDs resolved**. Skills promote only after RED eval + skill change + `node scripts/verify-skills.mjs`.
 
 ## Decisions
 
 | ID | Decision | Skill target |
 |---|---|---|
+| EX-PATTERN-01 | APPROVE — direct/native/framework/existing abstraction before named pattern | `skills/select-design-pattern` |
+| EX-PATTERN-02 | APPROVE — adapt to JVM, Python, .NET, TypeScript/JavaScript, and Swift idioms | `skills/select-design-pattern` |
+| EX-REFACTOR-01 | APPROVE — behavior-preserving slices, characterization baseline, targeted then broader checks | `skills/refactor-code-safely` |
+| EX-SMELL-01 | APPROVE — evidence and risk before smell; preserve DAMP tests and valid data carriers | `skills/diagnose-code-smells` |
 | EX-ARCH-01 | CHANGE — language-agnostic composition; language seams stay in language skills | `skills/compose-test-architecture` |
 | EX-NAME-01 | APPROVE — behavior names, domain verbs, target/expected | `skills/name-test-behavior` |
 | EX-JAVA-01 | APPROVE — JUnit 5 parameterization + immutable cases | `skills/junit-java` |

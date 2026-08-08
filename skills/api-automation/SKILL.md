@@ -23,6 +23,10 @@ Decision: **EX-API-01**. Pair with `api-contract-testing` for schema validation.
 - Success client and negative/raw path are separate methods.
 - Generate unique test data once; delete created state unless the environment is explicitly disposable.
 
+For a new client abstraction, apply `select-design-pattern` with the repository's
+language reference. Use Adapter/Facade only at a real transport/domain boundary,
+and Builder only for genuinely complex valid requests.
+
 ## Eval
 
 See `evals/EX-API-01.md`.

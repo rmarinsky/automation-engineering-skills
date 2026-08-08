@@ -30,6 +30,10 @@ Accessibility IDs and other native locators are OK. **Never XPath** — improve 
 - **Architecture / structure agent** asks to **clone** related SUT repos locally next to the autotest repo: app, frontend, BFF/proxy, GraphQL/gateway, backends, DB-related services.
 - Use that context to propose testability (IDs, deep links, API seams). Language skill agents do not re-run full discovery every time.
 
+Apply `select-design-pattern` only for a current cross-platform abstraction.
+Use Bridge only when platform and product behavior are independently varying;
+native screen composition remains the default.
+
 ## Eval
 
 See `evals/EX-MOBILE-01.md`.

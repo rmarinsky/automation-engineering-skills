@@ -1,6 +1,8 @@
 # How skills + agents install (multi-agent) + how we publish
 
-This pack targets the **Agent Skills** open format (`SKILL.md` + YAML frontmatter) plus thin **`sdet-*` subagents**. Skills are portable; agents are small markdown wrappers that route to those skills.
+This pack targets the **Agent Skills** open format (`SKILL.md` + YAML frontmatter)
+plus thin read-only/code-quality and **`sdet-*` agents**. Skills are portable;
+agents are small markdown wrappers that route to those skills.
 
 ## Simplest: one command (skills + agents)
 
@@ -17,9 +19,10 @@ npx -y github:rmarinsky/automation-engineering-skills -- -g
 That runs `scripts/install.mjs`, which:
 
 1. Installs every `skills/*/SKILL.md` via `npx skills add … --all`
-2. Symlinks `agents/sdet-*.md` into Cursor / Claude / Codex **agent** dirs
+2. Symlinks `agents/*.md` into Cursor / Claude / Codex **agent** dirs
 
-Then invoke **`@sdet-lead`**.
+Then invoke **`@sdet-lead`** for test automation or
+**`@code-quality-reviewer`** for read-only production/test code review.
 
 | Flag (after `--`) | Effect |
 |---|---|
@@ -41,6 +44,8 @@ Then invoke **`@sdet-lead`**.
 | Codex | `.codex/agents/` | `~/.codex/agents/` |
 
 Source of truth remains `./agents/*.md` in this repo.
+The installer keeps matching managed files and refuses to overwrite a different
+agent file; move or rename that collision before retrying.
 
 ## Skills-only (ecosystem CLI)
 
@@ -55,7 +60,7 @@ npx skills add rmarinsky/automation-engineering-skills -a cursor -a claude-code 
 | Portable (one source) | Not portable (per harness) |
 |---|---|
 | `skills/<name>/SKILL.md` | Where that folder is discovered |
-| `agents/sdet-*.md` bodies | `.cursor/agents` vs `.claude/agents` vs `.codex/agents` |
+| `agents/*.md` bodies | `.cursor/agents` vs `.claude/agents` vs `.codex/agents` |
 | `name` + `description` frontmatter | Plugin marketplace UX |
 
 ## Skill discovery paths (project → user global)
@@ -100,5 +105,5 @@ Or from a clone: `node scripts/install-agents.mjs` inside the app directory.
 
 - Maintain separate Cursor-only vs Claude-only skill text.  
 - One agent per stack (stack routing lives in `sdet-engineer`).  
-- Ask users to copy 16 skills and 4 agents by hand.  
+- Ask users to copy every skill and agent by hand.
 - Rely on Team Marketplace alone for public distribution.

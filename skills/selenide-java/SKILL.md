@@ -27,6 +27,9 @@ Decision: **EX-JAVA-02**. Apply `compose-test-architecture` and `name-test-behav
 
 Add narrow preloader/`shouldBe(hidden)` waits only when a screenshot/trace proves the control is gated.
 
+For a new page/component abstraction, apply `select-design-pattern` with its JVM
+reference. Keep Selenide conditions and scoped components as the framework seam.
+
 ## Eval
 
 See `evals/EX-JAVA-02.md`.

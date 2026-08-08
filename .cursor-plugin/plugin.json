@@ -1,8 +1,8 @@
 {
   "name": "automation-engineering-skills",
   "displayName": "Automation Engineering Skills",
-  "description": "Public skill pack for test automation architecture, naming, Java/Selenide/JUnit, Playwright Python/.NET, API clients, native mobile, contract validation, and CI fail-fast.",
-  "version": "0.2.0",
+  "description": "Public skill pack for evidence-based code-smell review, safe refactoring, native-first design patterns, and test automation engineering.",
+  "version": "0.3.0",
   "author": {
     "name": "rmarinsky"
   },
@@ -11,6 +11,9 @@
   "license": "MIT",
   "keywords": [
     "automation",
+    "code-smells",
+    "refactoring",
+    "design-patterns",
     "testing",
     "playwright",
     "selenide",

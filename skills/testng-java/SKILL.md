@@ -26,6 +26,9 @@ Decision: **EX-TESTNG-01**.
 
 `@DataProvider(parallel = true)` only after proof of independent data, driver/context, cleanup, and no order dependence.
 
+When introducing a new abstraction, apply `select-design-pattern` with its JVM
+reference. Existing TestNG listener/runner seams win over a custom pattern layer.
+
 ## Eval
 
 See `evals/EX-TESTNG-01.md`.

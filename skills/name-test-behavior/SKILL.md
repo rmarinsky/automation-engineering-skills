@@ -25,6 +25,14 @@ Names describe observable behavior and domain intent, not clicks or case numbers
 | Steps | One meaningful business action/verification | Wrap every click |
 | Comments | Ticket/risk/rule not visible from the name | Restate the code |
 
+## Refactoring names
+
+- Name methods/functions by domain intent, not the mechanics they currently use.
+- Boolean names read as predicates; query names must not hide mutation.
+- Separate Query from Modifier when a returned value also triggers a surprising side effect.
+- Preserve symmetric domain verbs and the repository's public vocabulary.
+- Do not rename a public API for aesthetics alone.
+
 ## Agent checklist
 
 1. Preserve existing repo naming if present.
