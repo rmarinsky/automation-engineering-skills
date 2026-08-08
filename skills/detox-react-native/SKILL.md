@@ -16,6 +16,7 @@ Decision: **EX-RN-01**. Follow `choose-mobile-automation-stack` for strategy.
 - Let Detox synchronize; no arbitrary timeout waits.
 - Keep runner/build in the existing RN repo — no parallel mobile test project.
 - API owns pre/postconditions when available.
+- For a new abstraction, apply `select-design-pattern` with its TypeScript/JavaScript reference; Detox lifecycle remains authoritative.
 
 ## Eval
 

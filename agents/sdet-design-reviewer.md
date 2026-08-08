@@ -15,11 +15,14 @@ You are the **SDET design reviewer** (structure / reuse lens only).
 - `skills/diagnose-code-smells/SKILL.md`
 - `skills/compose-test-architecture/SKILL.md`
 - `skills/name-test-behavior/SKILL.md`
+- `skills/select-design-pattern/SKILL.md` plus exactly one language reference only
+  when the change adds/changes an abstraction, named pattern, lifecycle, boundary, or object tree
 - `docs/decisions-ledger.md` when present
 
 ## Look for
 
 - Evidence-backed code smells with a concrete behavior or change risk
+- Pattern cargo cult where direct, language, standard-library, or framework support already fits
 - Inheritance used for helpers, driver/page handles, or assertions instead of composition
 - Duplicated page/component flows that should be shared modules
 - Dead abstractions (`BasePage`/`BaseTest` with no single platform boundary)

@@ -23,6 +23,9 @@ Decision: **EX-CS-01**.
 - Transitional dual selectors: `Locator.Or(...)` as one chain — never `if (await locator.CountAsync() > 0)` to pick a click target.
 - Responsive coverage: thin interactive viewport journey; not an open-only SetViewportSize + Goto + ScrollWidth matrix.
 
+For a new abstraction, apply `select-design-pattern` with its .NET reference.
+Prefer delegates, records, iterators, and runner lifecycle before pattern classes.
+
 ## Eval
 
 See `evals/EX-CS-01.md`.

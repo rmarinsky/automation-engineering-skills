@@ -28,6 +28,9 @@ Decisions: **EX-PY-01**, **EX-PY-02**.
 - Transitional dual selectors: `locator.or_(other)` as one chain — never `if locator.count() > 0` to pick a click target.
 - Responsive coverage: thin interactive viewport journey; not an open-only `set_viewport_size` + goto + scrollWidth matrix.
 
+For a new abstraction, apply `select-design-pattern` with its Python reference.
+Prefer functions, fixtures, protocols, generators, and dataclasses before pattern classes.
+
 ## Eval
 
 See `evals/EX-PY-01.md` and `evals/EX-PY-02.md`.

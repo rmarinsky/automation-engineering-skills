@@ -29,6 +29,10 @@ Decisions: **EX-JAVA-01**, **EX-JAVA-03**. Greenfield Java/Kotlin default is JUn
 
 Lombok is for DTO/case data only. Java version follows repository/CI toolchain — do not bump casually.
 
+When introducing a new abstraction, apply `select-design-pattern` with its JVM
+reference. JUnit extensions remain the authoritative lifecycle seam; do not
+recreate them as Template Method or BaseTest infrastructure.
+
 ## Eval
 
 See `evals/EX-JAVA-01.md` and `evals/EX-JAVA-03.md`.

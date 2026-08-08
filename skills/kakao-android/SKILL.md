@@ -16,6 +16,7 @@ Decision: **EX-ANDROID-01**. Follow `choose-mobile-automation-stack` for strateg
 - **XPath is forbidden.** Missing locator → improve **testability** first.
 - Rely on Espresso idling — no `Thread.sleep`.
 - Create/cleanup test data through API when a seam exists.
+- For a new abstraction, apply `select-design-pattern` with its JVM reference; Kakao/Espresso lifecycle remains authoritative.
 
 ## Eval
 

@@ -8,6 +8,8 @@ Status: **all 16 review IDs resolved**. Skills promote only after RED eval + ski
 
 | ID | Decision | Skill target |
 |---|---|---|
+| EX-PATTERN-01 | APPROVE — direct/native/framework/existing abstraction before named pattern | `skills/select-design-pattern` |
+| EX-PATTERN-02 | APPROVE — adapt to JVM, Python, .NET, TypeScript/JavaScript, and Swift idioms | `skills/select-design-pattern` |
 | EX-REFACTOR-01 | APPROVE — behavior-preserving slices, characterization baseline, targeted then broader checks | `skills/refactor-code-safely` |
 | EX-SMELL-01 | APPROVE — evidence and risk before smell; preserve DAMP tests and valid data carriers | `skills/diagnose-code-smells` |
 | EX-ARCH-01 | CHANGE — language-agnostic composition; language seams stay in language skills | `skills/compose-test-architecture` |

@@ -10,6 +10,16 @@ const evalsRoot = join(root, "evals");
 
 const required = [
   {
+    id: "EX-PATTERN-01",
+    skill: "select-design-pattern",
+    must: ["direct", "stdlib", "framework", "forces", "verification"],
+  },
+  {
+    id: "EX-PATTERN-02",
+    skill: "select-design-pattern",
+    must: ["JVM", "Python", ".NET", "TypeScript", "Swift"],
+  },
+  {
     id: "EX-REFACTOR-01",
     skill: "refactor-code-safely",
     must: ["behavior", "callers", "characterization", "targeted", "broader"],

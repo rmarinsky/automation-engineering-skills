@@ -16,6 +16,7 @@ Decision: **EX-IOS-01**. Follow `choose-mobile-automation-stack` for strategy.
 - **XPath is forbidden.** Unstable locator → improve **testability** (ID/deep link) first.
 - Use `waitForExistence` for readiness — never `sleep`.
 - API fixture owns create/cleanup; UI keeps journey + visible outcome.
+- For a new abstraction, apply `select-design-pattern` with its Swift reference; XCTest/XCUITest lifecycle remains authoritative.
 
 ## Eval
 
